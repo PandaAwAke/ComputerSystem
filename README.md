@@ -1,2 +1,10 @@
 # ComputerSystem
-This is the final digital circuit design project: Simple Computer System.
+## 简介
+
+这是数字电路与数字系统实验的最后一次大实验，形式是小组合作，我们的课题是制作简单计算机系统。
+
+
+
+## 工作小组
+
+许希帆，张宇晨，马英硕
