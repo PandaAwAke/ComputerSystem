@@ -1,0 +1,8 @@
+/project/db/
+/project/incremental_db/
+*.done
+*.rpt
+*.smsg
+*.summary
+*.bak
+*.qdf
