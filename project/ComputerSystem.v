@@ -76,12 +76,47 @@ module ComputerSystem(
 //  REG/WIRE declarations
 //=======================================================
 
+wire reset = 0;
+wire clrn = ~reset;
+
+// 键盘接线
+wire	[7:0] scanCode;
+wire	[7:0] scanCode_E0;
+wire	shift;
+wire	ctrl;
+wire	alt;
+wire	capslock;
+wire	insert;
+wire	newKey;
+wire	isASCIIkey;
+wire	ASCII;
 
 
 
 //=======================================================
 //  Structural coding
 //=======================================================
+
+keyboardHandler kbHandler(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	.clrn(clrn),
+	//////////// PS2 //////////
+	.PS2_CLK(PS2_CLK),
+	.PS2_DAT(PS2_DAT),
+	//////////// output //////////
+	.scanCode(scanCode),
+	.scanCode_E0(scanCode_E0),
+	.shift(shift),
+	.ctrl(ctrl),
+	.alt(alt),
+	.capslock(capslock),
+	.insert(insert),
+	.newKey(newKey),
+	.isASCIIkey(isASCIIkey),
+	.ASCII(ASCII)
+);
+
 
 
 endmodule

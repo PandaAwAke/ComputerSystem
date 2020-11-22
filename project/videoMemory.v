@@ -15,7 +15,9 @@ module videoMemory(
 	input		alt,
 	input		capslock,
 	input		insert,
-	input		newKey
+	input		newKey,
+	input		ASCII,		// 实际显示的ASCII值
+	input		isASCIIkey	// 扫描码是否是ASCII字符
 );
 
 //=======================================================
@@ -23,9 +25,7 @@ module videoMemory(
 //=======================================================
 
 parameter BASH_HEAD_LEN = 9;
-
 // 只读存储器
-(* ram_init_file = "init_files/scancode.mif" *) reg [7:0] lookupTable [255:0];
 reg [7:0] reg_keysX [639:0];		// h_addr对应的键X是多少 (0~69)
 reg [7:0] reg_keysY [479:0];		// v_addr对应的键Y是多少 (0~29)
 reg [11:0] keys_base [29:0];		// 第Y行字符对应的keys数组起始坐标
@@ -38,23 +38,21 @@ reg [11:0] vga_memory [4095:0];	// 字符显示存储器
 reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 
 // 控制变量
-reg [11:0] roll_cnt_lines;			// 滚屏滚掉的下标
-reg [7:0] roll_cnt;					// 滚屏滚掉多少行
+reg [7:0] roll_cnt_lines;			// 滚屏滚掉多少行
+reg [11:0] roll_cnt;					// 滚屏滚掉的下标
 reg [11:0] cursor;					// 光标，取值范围：0~2100
 reg [7:0] x_cnt;						// 当前水平方向已经有多少个字符，范围0~69
 reg [7:0] y_cnt;						// 当前竖直方向已经有多少行，范围0~29
+reg [7:0] y_real;						// 实际显示的行，是y_cnt + roll_cnt_lines
 reg [7:0] row_tail [59:0];			// 记录每一行的行末位置
 reg [59:0] enter;						// 记录这一行是否为回车产生的
 
 // wire计算变量
 wire cursor_en;						// 光标使能端
-wire [7:0] ASCII_helper;			// raw的ASCII值，不经过shift和Capslock加工
-wire [7:0] ASCII;						// 实际显示的ASCII值
-wire ASCIIKey;							// 扫描码是否是ASCII字符
 wire [7:0] keysX;
 wire [7:0] keysY;
 wire [11:0] keys_index;				// 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
-wire [7:0] showASCII;				// 应该显示的ASCII位置
+wire [7:0] showASCII;				// 应该显示的ASCII位置下标
 // 显示位置
 wire [7:0] offsetX;
 wire [7:0] offsetY;
@@ -101,35 +99,10 @@ clkgen #(2) cursorclk(
 //=======================================================
 //  Wire Logical coding
 //=======================================================
-assign ASCII_helper = (
-	(scanCode != 0) ? 
-	lookupTable[scanCode] :
-	8'h2F		// 右边小键盘的斜杠
-);
-assign ASCII = (
-	(shift && scanCode != 0) ?
-	shiftCase(ASCII_helper, capslock) :
-	(
-		(capslock == 1) ?
-		capslockCase(ASCII_helper) :
-		ASCII_helper
-	)
-);
-assign ASCIIKey = (
-	(scanCode != 8'h00 && 
-	scanCode != 8'h0D && // TAB
-	scanCode != 8'h76 && // ESC
-	scanCode != 8'h58 && // CapsLock
-	scanCode != 8'h12 && // LShift
-	scanCode != 8'h14 && // LCtrl
-	scanCode != 8'h11 && // LAlt
-	scanCode != 8'h59 && // RShift
-	((scanCode > 8'h0C && scanCode != 8'h78) || scanCode == 8'h08)) || // F1~F12
-	(scanCode_E0 == 8'h4A) // 右边的除号
-);
+
 assign keysX = reg_keysX[h_addr];
 assign keysY = reg_keysY[v_addr];
-assign keys_index = roll_cnt_lines + keys_base[keysY] + keysX;
+assign keys_index = roll_cnt + keys_base[keysY] + keysX;
 // 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
 assign showASCII = keys[keys_index];
 // 应该显示的ASCII位置
@@ -156,7 +129,7 @@ always @(posedge clk) begin
 			rgb <= showcolor;
 		else
 			rgb <= 12'hFFF;
-	end else if (enter[keysY + roll_cnt] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
+	end else if (enter[keysY + roll_cnt_lines] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
 		rgb <= showcolor_header;
 	end else begin	// 正常部分
 		rgb <= showcolor;
@@ -175,24 +148,24 @@ always @(posedge newKey) begin
 				cursor <= cursor + row_tail[y_cnt - 1] - 70 - BASH_HEAD_LEN;
 				row_tail[y_cnt] <= 0;
 				enter[y_cnt] <= 0;
-				if (roll_cnt > 0) begin
-					roll_cnt_lines <= roll_cnt_lines - 70;
-					roll_cnt <= roll_cnt - 1;
+				if (roll_cnt_lines > 0) begin
+					roll_cnt <= roll_cnt - 70;
+					roll_cnt_lines <= roll_cnt_lines - 1;
 				end
 			end
-		end else if (x_cnt == 0) begin			// 回到上一行逻辑
+		end else if (x_cnt == 0) begin			// 回到上一行逻辑(这一行无命令提示符)
 			if (y_cnt > 0) begin
 				x_cnt <= row_tail[y_cnt - 1];
 				y_cnt <= y_cnt - 1;
 				cursor <= cursor + row_tail[y_cnt - 1] - 70;
 				row_tail[y_cnt] <= 0;
 				enter[y_cnt] <= 0;
-				if (roll_cnt > 0) begin
-					roll_cnt_lines <= roll_cnt_lines - 70;
-					roll_cnt <= roll_cnt - 1;
+				if (roll_cnt_lines > 0) begin
+					roll_cnt <= roll_cnt - 70;
+					roll_cnt_lines <= roll_cnt_lines - 1;
 				end
 			end
-		end else begin												// 普通退格逻辑
+		end else begin									// 普通退格逻辑
 			x_cnt <= x_cnt - 1;
 			cursor <= cursor - 1;
 			row_tail[y_cnt] <= x_cnt - 1;
@@ -204,10 +177,10 @@ always @(posedge newKey) begin
 		row_tail[y_cnt] <= x_cnt;
 		enter[y_cnt + 1] <= 1;
 		if (y_cnt >= 28) begin		// 28行后自动滚屏
-			roll_cnt_lines <= roll_cnt_lines + 70;
-			roll_cnt <= roll_cnt + 1;
+			roll_cnt <= roll_cnt + 70;
+			roll_cnt_lines <= roll_cnt_lines + 1;
 		end
-	end else if (scanCode != 8'h66 && ASCIIKey) begin	// 其他正常字符键
+	end else if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
 		keys[cursor] = ASCII;
 		cursor <= cursor + 1;
 		// 处理x_cnt和y_cnt
@@ -216,8 +189,8 @@ always @(posedge newKey) begin
 			x_cnt <= 0;
 			row_tail[y_cnt] <= 69;
 			if (y_cnt >= 28) begin		// 28行后自动滚屏
-				roll_cnt_lines <= roll_cnt_lines + 70;
-				roll_cnt <= roll_cnt + 1;
+				roll_cnt <= roll_cnt + 70;
+				roll_cnt_lines <= roll_cnt_lines + 1;
 			end
 		end else begin
 			x_cnt <= x_cnt + 1;
@@ -231,33 +204,6 @@ end
 //=======================================================
 //  Functions
 //=======================================================
-
-function [7:0] shiftCase;
-	input [7:0] rawCase;
-	input capslock;
-	if (rawCase >= 8'h61 && rawCase <= 8'h7A)
-		if (capslock == 0)
-			shiftCase = rawCase - 8'h20;
-		else
-			shiftCase = rawCase;
-	case (rawCase)  // 符号表
-		8'h60: shiftCase = 8'h7E; 8'h31: shiftCase = 8'h21; 8'h32: shiftCase = 8'h40;
-		8'h33: shiftCase = 8'h23; 8'h34: shiftCase = 8'h24; 8'h35: shiftCase = 8'h25;
-		8'h36: shiftCase = 8'h5E; 8'h37: shiftCase = 8'h26; 8'h38: shiftCase = 8'h2A;
-		8'h39: shiftCase = 8'h28; 8'h30: shiftCase = 8'h29; 8'h2D: shiftCase = 8'h5F;
-		8'h3D: shiftCase = 8'h2B; 8'h5C: shiftCase = 8'h7C; 8'h5B: shiftCase = 8'h7B;
-		8'h5D: shiftCase = 8'h7D; 8'h3B: shiftCase = 8'h3A; 8'h27: shiftCase = 8'h22;
-		8'h2C: shiftCase = 8'h3C; 8'h2E: shiftCase = 8'h3E; 8'h2F: shiftCase = 8'h3F;
-	endcase
-endfunction
-
-function [7:0] capslockCase;
-	input [7:0] rawCase;
-	if (rawCase >= 8'h61 && rawCase <= 8'h7A)
-		capslockCase = rawCase - 8'h20;
-	else
-		capslockCase = rawCase;
-endfunction
 
 function [7:0] Header;  // 命令提示符内容
 	input [7:0] index;
