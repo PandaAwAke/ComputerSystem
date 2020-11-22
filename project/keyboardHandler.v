@@ -17,7 +17,7 @@ module keyboardHandler(
 	output	insert,
 	output	newKey,
 	output	isASCIIkey,
-	output	ASCII
+	output	[7:0]	ASCII
 );
 
 //=======================================================
