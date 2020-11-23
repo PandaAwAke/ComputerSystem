@@ -23,16 +23,27 @@ module videoMemory(
 	input				in_solved,						// 结束信号，解决完这条指令后传递1一个周期进这个模块
 	output	reg	out_solved,						// 本模块处理完结束信号会输出1一个周期
 	
-	output	reg	lineIn_next,
-	input				in_newLine_ready,
-	input				[6:0]		in_lineLen,			// 约定合法的一行最长63字符，值为实际长度
-	input				[511:0]	lineIn,				// 输入，最长63字符，应该按照in_lineLen取
+	// 外界模块输入bash输出信息，外部模块应该注意最后一位是00
+	output	reg	lineIn_nextASCII,
+	input				in_newASCII_ready,				// 这一行的ready，这一行结束时应该为0
+	//input				[6:0]		in_lineLen,			// 约定合法的一行最长64字符，值为实际长度
+	input				[7:0]		lineIn,				// 输入，最长64字符，应该按照in_lineLen取
 	
-	input				lineOut_next,					// 外界模块读好之后应该传递1进来一个周期
-	output	reg	out_newLine_ready,
+	// 向外界模块输出bash输入信息，外部模块应该注意最后一位是00
+	input				lineOut_nextASCII,			// 外界模块读好一个字符之后应该传递1进来一个周期
+	output	reg	out_newASCII_ready,	
 	output	reg	[5:0] 	out_lineLen,		// 约定合法的一行最长32字符，值为实际长度
-	output	reg	[255:0]	lineOut				// 输出，最长32字符，应该按照out_lineLen取
+	output			[7:0]		lineOut				// 输出，一个一个输出
 );
+
+initial begin
+	// output
+	out_solved = 0;
+	out_newASCII_ready = 0;
+	out_lineLen = 0;
+	lineIn_nextASCII = 0;
+	
+end
 
 //=======================================================
 //  PARAMETER/REG/WIRE declarations
@@ -120,6 +131,12 @@ assign vm_index_header = ASCII_base[Header(keysX)] + offsetY;
 assign line_header = vga_memory[vm_index_header];
 assign showcolor_header = line_header[offsetX] ? 12'hFFF : 12'h0;
 
+// 输出
+assign lineOut = (
+	(out_lineLen_help == out_lineLen) ?
+	0 :
+	lineOut_help[out_lineLen_help]
+);
 
 
 //=======================================================
@@ -138,7 +155,7 @@ end
 
 always @(posedge clk) begin
 	newKey_sync <= {newKey_sync[1:0], newKey};
-	//inLine_sync <= {inLine_sync[1:0], in_newLine_ready};
+	//inLine_sync <= {inLine_sync[1:0], in_newASCII_ready};
 end
 
 //=======================================================
@@ -173,13 +190,8 @@ reg [7:0] row_tail [59:0];			// 记录每一行的行末位置
 reg [59:0] enter;						// 记录这一行是否为回车产生的
 
 reg [5:0] out_lineLen_help;		// 向外输出长度的辅助变量
-reg [255:0] lineOut_help;
-wire [7:0] index_lineOut_lower = {out_lineLen_help[4:0], 3'b000};
-wire [7:0] index_lineOut_higher = {out_lineLen_help[4:0], 3'b111};
-
-reg [6:0] in_lineLen_help;			// 输入数据并向屏幕输出长度的辅助变量
-wire [8:0] index_lineIn_lower  = {in_lineLen_help[5:0] - 6'b1, 3'b000};
-wire [8:0] index_lineIn_higher = {in_lineLen_help[5:0] - 6'b1, 3'b111};
+reg [7:0] lineOut_help 	[31:0];
+//reg [6:0] in_lineLen_help;			// 输入数据并向屏幕输出长度的辅助变量
 
 reg keyboard_valid;					// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
 
@@ -191,84 +203,71 @@ initial begin
 	y_cnt = 0;
 	enter = 1;
 	out_lineLen_help = 0;
-	lineOut_help = 0;
-	in_lineLen_help = 0;
+	//in_lineLen_help = 0;
 	keyboard_valid = 1;
-	
-	// output
-	out_solved = 0;
-	out_newLine_ready = 0;
-	out_lineLen = 0;
-	lineOut = 0;
-	lineIn_next = 0;
 end
 
 
 // 新按键逻辑
 always @(posedge clk) begin
 	
-	if (out_newLine_ready && lineOut_next) begin					// 数据输出取消逻辑
-		out_newLine_ready <= 0;
+	if (out_newASCII_ready) begin			// 数据输出逻辑
+		if (out_lineLen_help == out_lineLen) begin
+			out_newASCII_ready <= 0;
+		end else if (lineOut_nextASCII) begin
+			out_lineLen_help <= out_lineLen_help + 1;
+		end
 	end
 	
 	
 	if (out_solved) begin
 		out_solved <= 0;
 	end else if (in_solved) begin
-		// 解决这条指令的逻辑
+		// 解决这条指令，恢复输入模式
 		keyboard_valid <= 1;
-		y_cnt <= y_cnt + 1;
 		x_cnt <= BASH_HEAD_LEN;
-		cursor <= cursor + (70 + BASH_HEAD_LEN - x_cnt);
+		cursor <= cursor + BASH_HEAD_LEN;
 		row_tail[y_cnt] <= x_cnt;
-		enter[y_cnt + 1] <= 1; 	// 新的命令提示符
-		if (y_cnt >= 28) begin	// 28行后自动滚屏
-			roll_cnt <= roll_cnt + 70;
-			roll_cnt_lines <= roll_cnt_lines + 1;
-		end
+		enter[y_cnt] <= 1; 	// 新的命令提示符
 	end
 	
 	
-	// 下面对待in_lineLen_help和out_lineLen_help的方式不一样
-	// in_lineLen_help为 1 的时候读取外界输入的第一个数据，
-	// 而out_lineLen_help为 0 的时候向输出缓冲中存入第一个数据。
 	
-	if (lineIn_next) begin
-		lineIn_next <= 0;
-		in_lineLen_help <= 0;
-	end else if (in_newLine_ready) begin							// 有数据输入逻辑
-		in_lineLen_help <= in_lineLen_help + 1;
-		if (in_lineLen_help > in_lineLen)							// 这行输出完了，请求下一行
-			lineIn_next <= 1;
-		else if (in_lineLen_help == 0) begin
-			// 这行行首输出到屏幕逻辑，仅换行和初始化，不实际读入数据
-			y_cnt <= y_cnt + 1;
-			x_cnt <= 0;
-			cursor <= cursor + (70 - x_cnt);
-			row_tail[y_cnt] <= x_cnt;
-			if (y_cnt >= 28) begin										// 28行后自动滚屏
-				roll_cnt <= roll_cnt + 70;
-				roll_cnt_lines <= roll_cnt_lines + 1;
-			end
-		end else begin
-			// 后续输出到屏幕逻辑
-			keys[cursor] = lineIn[index_lineIn_higher:index_lineIn_lower];
-			cursor <= cursor + 1;
-			// 处理x_cnt和y_cnt
-			if (x_cnt == 69) begin
+	if (lineIn_nextASCII) begin
+		lineIn_nextASCII <= 0;
+	end else begin
+		if (in_newASCII_ready) begin										// 有数据输入逻辑
+			lineIn_nextASCII <= 1;
+			if (lineIn == 0) begin											// 这行输出完了
 				y_cnt <= y_cnt + 1;
 				x_cnt <= 0;
-				row_tail[y_cnt] <= 69;
-				if (y_cnt >= 28) begin									// 28行后自动滚屏
+				cursor <= cursor + (70 - x_cnt);
+				row_tail[y_cnt] <= x_cnt;
+				if (y_cnt >= 28) begin										// 28行后自动滚屏
 					roll_cnt <= roll_cnt + 70;
 					roll_cnt_lines <= roll_cnt_lines + 1;
 				end
 			end else begin
-				x_cnt <= x_cnt + 1;
-				row_tail[y_cnt] <= x_cnt + 1;
+				// 后续输出到屏幕逻辑
+				keys[cursor] <= lineIn;
+				cursor <= cursor + 1;
+				// 处理x_cnt和y_cnt
+				if (x_cnt == 69) begin
+					y_cnt <= y_cnt + 1;
+					x_cnt <= 0;
+					row_tail[y_cnt] <= 69;
+					if (y_cnt >= 28) begin									// 28行后自动滚屏
+						roll_cnt <= roll_cnt + 70;
+						roll_cnt_lines <= roll_cnt_lines + 1;
+					end
+				end else begin
+					x_cnt <= x_cnt + 1;
+					row_tail[y_cnt] <= x_cnt + 1;
+				end
 			end
 		end
 	end
+
 	
 	
 	
@@ -304,10 +303,12 @@ always @(posedge clk) begin
 		end else if (scanCode == 8'h5A || scanCode_E0 == 8'h5A) begin	// 回车键
 			out_lineLen <= out_lineLen_help;
 			out_lineLen_help <= 0;
-			out_newLine_ready <= 1;
+			out_newASCII_ready <= 1;				// 空行也必须向外传递，否则无法完成处理
 			y_cnt <= y_cnt + 1;
-			x_cnt <= BASH_HEAD_LEN;
-			cursor <= cursor + (70 + BASH_HEAD_LEN - x_cnt);
+			//x_cnt <= BASH_HEAD_LEN;
+			x_cnt <= 0;
+			//cursor <= cursor + (70 + BASH_HEAD_LEN - x_cnt);
+			cursor <= cursor + (70 - x_cnt);
 			row_tail[y_cnt] <= x_cnt;
 			// enter[y_cnt + 1] <= 1; 	// 新的命令提示符那行让接受到结束信号后说了算
 			keyboard_valid <= 0;
@@ -318,7 +319,7 @@ always @(posedge clk) begin
 		end else if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
 			if (out_lineLen_help < 32) begin						// 维护输出字符串
 				out_lineLen_help <= out_lineLen_help + 1;
-				lineOut_help[index_lineOut_higher:index_lineOut_lower] <= ASCII;
+				lineOut_help[out_lineLen_help] <= ASCII;
 			end
 			keys[cursor] = ASCII;
 			cursor <= cursor + 1;
