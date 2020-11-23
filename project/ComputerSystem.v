@@ -89,15 +89,31 @@ wire	capslock;
 wire	insert;
 wire	newKey;
 wire	isASCIIkey;
-wire	ASCII;
+wire	[7:0]	ASCII;
 
+// 显存控制模块接线
+wire [9:0] h_addr;
+wire [9:0] v_addr;
+wire [11:0] rgb;
 
+// 显存接口模块接线
+wire in_solved;
+wire out_solved;
+
+wire lineIn_nextASCII;
+wire in_newASCII_ready;
+wire [7:0] lineIn;
+
+wire lineOut_nextASCII;
+wire out_newASCII_ready;
+wire [5:0] out_lineLen;
+wire [7:0] lineOut;
 
 //=======================================================
 //  Structural coding
 //=======================================================
 
-keyboardHandler kbHandler(
+keyboardHandler mys_kbHandler(
 	//////////// CLK //////////
 	.clk(CLOCK_50),
 	.clrn(clrn),
@@ -117,6 +133,82 @@ keyboardHandler kbHandler(
 	.ASCII(ASCII)
 );
 
+
+clkgen #(25000000) mys_vgaclk(
+	.clkin(CLOCK_50), 
+	.rst(reset), 
+	.clken(1'b1), 
+	.clkout(VGA_CLK)
+);
+
+
+vga_ctrl vga_control(
+	.pclk(VGA_CLK), 
+	.reset(reset),
+	.vga_data(rgb),
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.hsync(VGA_HS),
+	.vsync(VGA_VS),
+	.valid(VGA_BLANK_N),
+	.vga_r(VGA_R),
+	.vga_g(VGA_G),
+	.vga_b(VGA_B)
+);
+
+
+videoMemory mys_vmemory(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	
+	//////////// VGA //////////
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.rgb(rgb),
+	
+	//////////// KBHandler //////////
+	.scanCode(scanCode),
+	.scanCode_E0(scanCode_E0),
+	.shift(shift),
+	.ctrl(ctrl),
+	.alt(alt),
+	.capslock(capslock),
+	.insert(insert),
+	.newKey(newKey),
+	.ASCII(ASCII),
+	.isASCIIkey(isASCIIkey),
+	
+	//////////// Interface ///////////
+	.in_solved(in_solved),
+	.out_solved(out_solved),
+	
+	.lineIn_nextASCII(lineIn_nextASCII),
+	.in_newASCII_ready(in_newASCII_ready),
+	.lineIn(lineIn),
+	
+	.lineOut_nextASCII(lineOut_nextASCII),
+	.out_newASCII_ready(out_newASCII_ready),	
+	.out_lineLen(out_lineLen),
+	.lineOut(lineOut)
+);
+
+
+EchoExample mys_echoInteract(
+	//////////// CLK ////////////
+	.clk(CLOCK_50),
+	//////////// Video Memory : Solved Signal ///////////
+	.in_solved(in_solved),
+	.out_solved(out_solved),
+
+	.lineIn_nextASCII(lineIn_nextASCII),				
+	.in_newASCII_ready(in_newASCII_ready),
+	.lineIn(lineIn),
+	
+	.lineOut_nextASCII(lineOut_nextASCII),
+	.out_newASCII_ready(out_newASCII_ready),
+	.out_lineLen(out_lineLen),
+	.lineOut(lineOut)
+);
 
 
 endmodule

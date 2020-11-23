@@ -1,3 +1,5 @@
+// This is the keyboard module (MYS).
+
 module keyboardHandler(
 	//////////// CLK //////////
 	input 	clk,
@@ -136,7 +138,7 @@ assign shift = state[18] | state[89];
 assign ctrl = state[20];					// Only left ctrl
 assign alt = state[17];						// Only left alt
 assign capslock = state[88] | capslockflag;
-assign ins = state_E0[112] | insertflag;
+assign insert = state_E0[112] | insertflag;
 assign newKey = buffer_newkey[2];
 assign ASCII_helper = (
 	(scanCode != 0) ? 

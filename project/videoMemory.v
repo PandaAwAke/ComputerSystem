@@ -1,3 +1,5 @@
+// This is the bash I/O main module (MYS).
+
 module videoMemory(
 	//////////// CLK //////////
 	input		clk,
@@ -25,14 +27,13 @@ module videoMemory(
 	
 	// 外界模块输入bash输出信息，外部模块应该注意最后一位是00
 	output	reg	lineIn_nextASCII,
-	input				in_newASCII_ready,				// 这一行的ready，这一行结束时应该为0
-	//input				[6:0]		in_lineLen,			// 约定合法的一行最长64字符，值为实际长度
+	input				in_newASCII_ready,			// 这一行的ready，这一行结束时应该为0
 	input				[7:0]		lineIn,				// 输入，最长64字符，应该按照in_lineLen取
 	
 	// 向外界模块输出bash输入信息，外部模块应该注意最后一位是00
 	input				lineOut_nextASCII,			// 外界模块读好一个字符之后应该传递1进来一个周期
 	output	reg	out_newASCII_ready,	
-	output	reg	[5:0] 	out_lineLen,		// 约定合法的一行最长32字符，值为实际长度
+	output	reg	[5:0] 	out_lineLen,		// 约定合法的一行最长31字符+00结束，值为实际长度
 	output			[7:0]		lineOut				// 输出，一个一个输出
 );
 
@@ -54,8 +55,8 @@ parameter BASH_HEAD_LEN = 9;
 reg [7:0] reg_keysX [639:0];		// h_addr对应的键X是多少 (0~69)
 reg [7:0] reg_keysY [479:0];		// v_addr对应的键Y是多少 (0~29)
 reg [11:0] keys_base [29:0];		// 第Y行字符对应的keys数组起始坐标
-reg [7:0] baseX [639:0];			// h_addr处的字符的起始值，如0~8对应0，9~17对应9
-reg [7:0] baseY [479:0];			// v_addr处的字符的起始值
+reg [11:0] baseX [639:0];			// h_addr处的字符的起始值，如0~8对应0，9~17对应9
+reg [11:0] baseY [479:0];			// v_addr处的字符的起始值
 reg [11:0] ASCII_base [255:0];	// ASCII字符对应的vga_memory的基准位置
 
 // 读写存储器
@@ -120,6 +121,7 @@ assign keysY = reg_keysY[v_addr];
 assign keys_index = roll_cnt + keys_base[keysY] + keysX;
 // 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
 assign showASCII = keys[keys_index];
+
 // 应该显示的ASCII位置
 assign offsetX = h_addr - baseX[h_addr];
 assign offsetY = v_addr - baseY[v_addr];
@@ -135,7 +137,7 @@ assign showcolor_header = line_header[offsetX] ? 12'hFFF : 12'h0;
 assign lineOut = (
 	(out_lineLen_help == out_lineLen) ?
 	0 :
-	lineOut_help[out_lineLen_help]
+	buffer[out_lineLen_help]
 );
 
 
@@ -163,6 +165,8 @@ end
 //=======================================================
 // 显示逻辑
 always @(posedge clk) begin
+	
+	
 	if (h_addr >= 630) begin
 		rgb <= 12'h0;
 	end else if (keys_index == cursor && cursor_en) begin // 光标部分
@@ -190,11 +194,12 @@ reg [7:0] row_tail [59:0];			// 记录每一行的行末位置
 reg [59:0] enter;						// 记录这一行是否为回车产生的
 
 reg [5:0] out_lineLen_help;		// 向外输出长度的辅助变量
-reg [7:0] lineOut_help 	[31:0];
-//reg [6:0] in_lineLen_help;			// 输入数据并向屏幕输出长度的辅助变量
+reg [7:0] buffer 	[31:0];
+//reg [6:0] in_lineLen_help;		// 输入数据并向屏幕输出长度的辅助变量
 
 reg keyboard_valid;					// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
 
+// REGISTERS INITIALIZATION
 initial begin
 	roll_cnt_lines = 0;
 	roll_cnt = 0;
@@ -208,16 +213,34 @@ initial begin
 end
 
 
-// 新按键逻辑
+// Cashing, 防止织毛衣
+// 防止织毛衣，下一个周期再去存储器存
+//////////// keys ////////////
+reg [12:0]	keys_index_helper = 0;		// keys的下标
+reg 			flag_keys_write = 0;			// 写入flag标记，为1则写入
+reg [7:0] 	keys_ASCII_help = 0;			// 写入内容
+//////////// row_tail ////////////
+reg [7:0]	row_tail_index_helper = 0;
+reg 			flag_row_tail_write = 0;
+reg [7:0] 	row_tail_content_help = 0;
+
+// 主要逻辑块
 always @(posedge clk) begin
-	
-	if (out_newASCII_ready) begin			// 数据输出逻辑
-		if (out_lineLen_help == out_lineLen) begin
-			out_newASCII_ready <= 0;
-		end else if (lineOut_nextASCII) begin
-			out_lineLen_help <= out_lineLen_help + 1;
-		end
+	// Cashing-keys
+	if (flag_keys_write) begin					// 缓存机制：keys在下一个周期进行存储
+		keys[keys_index_helper] <= keys_ASCII_help;
+		keys_index_helper <= 0;
+		flag_keys_write <= 0;
+		keys_ASCII_help <= 0;
 	end
+	// Cashing-row_tail
+	if (flag_row_tail_write) begin					// 缓存机制：keys在下一个周期进行存储
+		row_tail[row_tail_index_helper] <= row_tail_content_help;
+		row_tail_index_helper <= 0;
+		flag_row_tail_write <= 0;
+		row_tail_content_help <= 0;
+	end
+
 	
 	
 	if (out_solved) begin
@@ -227,46 +250,81 @@ always @(posedge clk) begin
 		keyboard_valid <= 1;
 		x_cnt <= BASH_HEAD_LEN;
 		cursor <= cursor + BASH_HEAD_LEN;
-		row_tail[y_cnt] <= x_cnt;
+		
+		//row_tail[y_cnt] <= x_cnt;
+		row_tail_index_helper <= y_cnt;
+		flag_row_tail_write <= 1;
+		row_tail_content_help <= x_cnt;
+		
 		enter[y_cnt] <= 1; 	// 新的命令提示符
 	end
 	
 	
+	// 屏幕输入，向外界输出逻辑
+	if (!keyboard_valid)							// 键盘不能输入才执行，防止与顶层模块交互错误（保险机制）
+		if (out_newASCII_ready) begin			// 数据输出逻辑
+			if (out_lineLen_help == out_lineLen) begin
+				out_newASCII_ready <= 0;
+			end else if (lineOut_nextASCII) begin
+				out_lineLen_help <= out_lineLen_help + 1;
+			end
+		end
 	
-	if (lineIn_nextASCII) begin
-		lineIn_nextASCII <= 0;
-	end else begin
-		if (in_newASCII_ready) begin										// 有数据输入逻辑
-			lineIn_nextASCII <= 1;
-			if (lineIn == 0) begin											// 这行输出完了
-				y_cnt <= y_cnt + 1;
-				x_cnt <= 0;
-				cursor <= cursor + (70 - x_cnt);
-				row_tail[y_cnt] <= x_cnt;
-				if (y_cnt >= 28) begin										// 28行后自动滚屏
-					roll_cnt <= roll_cnt + 70;
-					roll_cnt_lines <= roll_cnt_lines + 1;
-				end
-			end else begin
-				// 后续输出到屏幕逻辑
-				keys[cursor] <= lineIn;
-				cursor <= cursor + 1;
-				// 处理x_cnt和y_cnt
-				if (x_cnt == 69) begin
+	
+	// 外界输入，向屏幕输出逻辑
+	if (!keyboard_valid)							// 键盘不能输入才执行，防止与顶层模块交互错误（保险机制）
+		if (lineIn_nextASCII) begin
+			lineIn_nextASCII <= 0;
+		end begin
+			if (in_newASCII_ready) begin		// 有数据输入
+				lineIn_nextASCII <= 1;
+				if (lineIn == 0) begin			// 这行输出完了
 					y_cnt <= y_cnt + 1;
 					x_cnt <= 0;
-					row_tail[y_cnt] <= 69;
-					if (y_cnt >= 28) begin									// 28行后自动滚屏
+					cursor <= cursor + (70 - x_cnt);
+					
+					//row_tail[y_cnt] <= x_cnt;
+					row_tail_index_helper <= y_cnt;
+					flag_row_tail_write <= 1;
+					row_tail_content_help <= x_cnt;
+					
+					if (y_cnt >= 28) begin										// 28行后自动滚屏
 						roll_cnt <= roll_cnt + 70;
 						roll_cnt_lines <= roll_cnt_lines + 1;
 					end
 				end else begin
-					x_cnt <= x_cnt + 1;
-					row_tail[y_cnt] <= x_cnt + 1;
+					// 后续输出到屏幕逻辑
+					//keys[cursor] <= lineIn;
+					flag_keys_write <= 1;
+					keys_index_helper <= cursor;
+					keys_ASCII_help <= lineIn;
+					
+					cursor <= cursor + 1;
+					// 处理x_cnt和y_cnt
+					if (x_cnt == 69) begin
+						y_cnt <= y_cnt + 1;
+						x_cnt <= 0;
+						
+						//row_tail[y_cnt] <= 69;
+						row_tail_index_helper <= y_cnt;
+						flag_row_tail_write <= 1;
+						row_tail_content_help <= 69;
+						
+						if (y_cnt >= 28) begin									// 28行后自动滚屏
+							roll_cnt <= roll_cnt + 70;
+							roll_cnt_lines <= roll_cnt_lines + 1;
+						end
+					end else begin
+						x_cnt <= x_cnt + 1;
+						
+						//row_tail[y_cnt] <= x_cnt + 1;
+						row_tail_index_helper <= y_cnt;
+						flag_row_tail_write <= 1;
+						row_tail_content_help <= x_cnt + 1;
+					end
 				end
 			end
 		end
-	end
 
 	
 	
@@ -275,7 +333,13 @@ always @(posedge clk) begin
 	if (sampling_newKey && keyboard_valid) begin
 		// 新键处理开始
 		if (scanCode == 8'h66 && cursor > 0) begin 				// 退格键，有格可退
-			keys[cursor - 1] = 0;
+			
+			// keys[cursor - 1] <= 0;
+			// 防止织毛衣，交给下个周期做
+			flag_keys_write <= 1;
+			keys_index_helper <= cursor - 1;
+			keys_ASCII_help <= 0;
+			
 			// 处理x_cnt和y_cnt
 			if (enter[y_cnt] && x_cnt == BASH_HEAD_LEN) begin	// 命令提示符到头了
 				out_lineLen_help <= 0;
@@ -285,7 +349,12 @@ always @(posedge clk) begin
 					x_cnt <= row_tail[y_cnt - 1];
 					y_cnt <= y_cnt - 1;
 					cursor <= cursor + row_tail[y_cnt - 1] - 70;
-					row_tail[y_cnt] <= 0;
+					
+					//row_tail[y_cnt] <= 0;
+					row_tail_index_helper <= y_cnt;
+					flag_row_tail_write <= 1;
+					row_tail_content_help <= 0;
+					
 					enter[y_cnt] <= 0;
 					if (roll_cnt_lines > 0) begin
 						roll_cnt <= roll_cnt - 70;
@@ -298,7 +367,10 @@ always @(posedge clk) begin
 				out_lineLen_help <= out_lineLen_help - 1;
 				x_cnt <= x_cnt - 1;
 				cursor <= cursor - 1;
-				row_tail[y_cnt] <= x_cnt - 1;
+				//row_tail[y_cnt] <= x_cnt - 1;
+				row_tail_index_helper <= y_cnt;
+				flag_row_tail_write <= 1;
+				row_tail_content_help <= x_cnt - 1;
 			end
 		end else if (scanCode == 8'h5A || scanCode_E0 == 8'h5A) begin	// 回车键
 			out_lineLen <= out_lineLen_help;
@@ -309,7 +381,12 @@ always @(posedge clk) begin
 			x_cnt <= 0;
 			//cursor <= cursor + (70 + BASH_HEAD_LEN - x_cnt);
 			cursor <= cursor + (70 - x_cnt);
-			row_tail[y_cnt] <= x_cnt;
+			
+			//row_tail[y_cnt] <= x_cnt;
+			row_tail_index_helper <= y_cnt;
+			flag_row_tail_write <= 1;
+			row_tail_content_help <= x_cnt;
+			
 			// enter[y_cnt + 1] <= 1; 	// 新的命令提示符那行让接受到结束信号后说了算
 			keyboard_valid <= 0;
 			if (y_cnt >= 28) begin										// 28行后自动滚屏
@@ -319,26 +396,37 @@ always @(posedge clk) begin
 		end else if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
 			if (out_lineLen_help < 32) begin						// 维护输出字符串
 				out_lineLen_help <= out_lineLen_help + 1;
-				lineOut_help[out_lineLen_help] <= ASCII;
+				buffer[out_lineLen_help] <= ASCII;
 			end
-			keys[cursor] = ASCII;
+			//keys[cursor] <= ASCII;
+			flag_keys_write <= 1;
+			keys_index_helper <= cursor;
+			keys_ASCII_help <= ASCII;
+			
 			cursor <= cursor + 1;
 			// 处理x_cnt和y_cnt
 			if (x_cnt == 69) begin
 				y_cnt <= y_cnt + 1;
 				x_cnt <= 0;
-				row_tail[y_cnt] <= 69;
+				//row_tail[y_cnt] <= 69;
+				row_tail_index_helper <= y_cnt;
+				flag_row_tail_write <= 1;
+				row_tail_content_help <= 69;
 				if (y_cnt >= 28) begin									// 28行后自动滚屏
 					roll_cnt <= roll_cnt + 70;
 					roll_cnt_lines <= roll_cnt_lines + 1;
 				end
 			end else begin
 				x_cnt <= x_cnt + 1;
-				row_tail[y_cnt] <= x_cnt + 1;
+				//row_tail[y_cnt] <= x_cnt + 1;
+				row_tail_index_helper <= y_cnt;
+				flag_row_tail_write <= 1;
+				row_tail_content_help <= x_cnt + 1;
 			end
 		end
 		// 新键处理结束
 	end
+	
 end
 
 
