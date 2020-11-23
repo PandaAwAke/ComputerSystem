@@ -135,8 +135,8 @@ end
 //=======================================================
 
 assign shift = state[18] | state[89];
-assign ctrl = state[20];					// Only left ctrl
-assign alt = state[17];						// Only left alt
+assign ctrl =  state[20] | state_E0[20];
+assign alt =   state[17] | state_E0[17];
 assign capslock = state[88] | capslockflag;
 assign insert = state_E0[112] | insertflag;
 assign newKey = buffer_newkey[2];
@@ -156,13 +156,16 @@ assign ASCII = (
 );
 assign isASCIIkey = (
 	(scanCode != 8'h00 && 
-	scanCode != 8'h0D && // TAB
-	scanCode != 8'h76 && // ESC
-	scanCode != 8'h58 && // CapsLock
-	scanCode != 8'h12 && // LShift
-	scanCode != 8'h14 && // LCtrl
-	scanCode != 8'h11 && // LAlt
-	scanCode != 8'h59 && // RShift
+	scanCode	!= 8'h0D && // TAB
+	scanCode	!= 8'h76 && // ESC
+	scanCode	!= 8'h58 && // CapsLock
+	scanCode	!= 8'h12 && // LShift
+	scanCode	!= 8'h14 && // LCtrl
+	scanCode	!= 8'h11 && // LAlt
+	scanCode	!= 8'h59 && // RShift
+	scanCode	!= 8'h66 && // 退格键
+	scanCode	!= 8'h5A && // LEnter
+	scanCode	!= 8'h7E && // Scr LK
 	((scanCode > 8'h0C && scanCode != 8'h78) || scanCode == 8'h08)) || // F1~F12
 	(scanCode_E0 == 8'h4A) // 右边的除号是，其他的E0开头的都不是
 );

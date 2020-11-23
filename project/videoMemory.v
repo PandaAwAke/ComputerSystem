@@ -33,7 +33,7 @@ module videoMemory(
 	// 向外界模块输出bash输入信息，外部模块应该注意最后一位是00
 	input				lineOut_nextASCII,			// 外界模块读好一个字符之后应该传递1进来一个周期
 	output	reg	out_newASCII_ready,	
-	output	reg	[5:0] 	out_lineLen,		// 约定合法的一行最长31字符+00结束，值为实际长度
+	output	reg	[5:0] 	out_lineLen,		// 约定合法的一行最长32字符+00结束，值为实际长度
 	output			[7:0]		lineOut				// 输出，一个一个输出
 );
 
@@ -195,6 +195,10 @@ reg [59:0] enter;						// 记录这一行是否为回车产生的
 
 reg [5:0] out_lineLen_help;		// 向外输出长度的辅助变量
 reg [7:0] buffer 	[31:0];
+
+reg ROLL_CLEAR_FIRST_LINE;			// 滚屏太多清除第一行
+reg [7:0] ROLL_CLEAR_ITER;			// 滚屏清除第一行用的循环变量
+
 //reg [6:0] in_lineLen_help;		// 输入数据并向屏幕输出长度的辅助变量
 
 reg keyboard_valid;					// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
@@ -208,7 +212,12 @@ initial begin
 	y_cnt = 0;
 	enter = 1;
 	out_lineLen_help = 0;
+	
+	ROLL_CLEAR_FIRST_LINE = 0;
+	ROLL_CLEAR_ITER = 0;
 	//in_lineLen_help = 0;
+	
+	
 	keyboard_valid = 1;
 end
 
@@ -226,6 +235,32 @@ reg [7:0] 	row_tail_content_help = 0;
 
 // 主要逻辑块
 always @(posedge clk) begin
+	if (ROLL_CLEAR_FIRST_LINE) begin			// 滚屏到57行了，把后面的行都往上移一行
+		if (ROLL_CLEAR_ITER == 0) begin
+			// 清空第一行的初始化操作
+			cursor <= cursor - 70;
+			y_cnt <= y_cnt - 1;
+			roll_cnt <= roll_cnt - 70;
+			roll_cnt_lines <= roll_cnt_lines - 1;
+		end
+		if (ROLL_CLEAR_ITER < 70) begin
+			ROLL_CLEAR_ITER <= ROLL_CLEAR_ITER + 1;
+			keys[ROLL_CLEAR_ITER] <= keys[ROLL_CLEAR_ITER + 70];
+			if (ROLL_CLEAR_ITER < 57) begin
+				row_tail[ROLL_CLEAR_ITER] <= row_tail[ROLL_CLEAR_ITER + 1];
+				enter[ROLL_CLEAR_ITER] <= enter[ROLL_CLEAR_ITER + 1];
+			end
+		end else begin
+			ROLL_CLEAR_FIRST_LINE <= 0;
+			ROLL_CLEAR_ITER <= 0;
+		end
+		
+	end else begin									// 不缩进了
+	
+	
+	ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 57);// 57行滚屏时清空第一行并移动后面所有的行
+	
+	
 	// Cashing-keys
 	if (flag_keys_write) begin					// 缓存机制：keys在下一个周期进行存储
 		keys[keys_index_helper] <= keys_ASCII_help;
@@ -288,7 +323,7 @@ always @(posedge clk) begin
 					flag_row_tail_write <= 1;
 					row_tail_content_help <= x_cnt;
 					
-					if (y_cnt >= 28) begin										// 28行后自动滚屏
+					if (y_cnt >= 27) begin										// 27行后自动滚屏
 						roll_cnt <= roll_cnt + 70;
 						roll_cnt_lines <= roll_cnt_lines + 1;
 					end
@@ -310,7 +345,7 @@ always @(posedge clk) begin
 						flag_row_tail_write <= 1;
 						row_tail_content_help <= 69;
 						
-						if (y_cnt >= 28) begin									// 28行后自动滚屏
+						if (y_cnt >= 27) begin									// 27行后自动滚屏
 							roll_cnt <= roll_cnt + 70;
 							roll_cnt_lines <= roll_cnt_lines + 1;
 						end
@@ -389,10 +424,12 @@ always @(posedge clk) begin
 			
 			// enter[y_cnt + 1] <= 1; 	// 新的命令提示符那行让接受到结束信号后说了算
 			keyboard_valid <= 0;
-			if (y_cnt >= 28) begin										// 28行后自动滚屏
+			if (y_cnt >= 27) begin										// 27行后自动滚屏
 				roll_cnt <= roll_cnt + 70;
 				roll_cnt_lines <= roll_cnt_lines + 1;
 			end
+			
+			
 		end else if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
 			if (out_lineLen_help < 32) begin						// 维护输出字符串
 				out_lineLen_help <= out_lineLen_help + 1;
@@ -412,7 +449,7 @@ always @(posedge clk) begin
 				row_tail_index_helper <= y_cnt;
 				flag_row_tail_write <= 1;
 				row_tail_content_help <= 69;
-				if (y_cnt >= 28) begin									// 28行后自动滚屏
+				if (y_cnt >= 27) begin									// 27行后自动滚屏
 					roll_cnt <= roll_cnt + 70;
 					roll_cnt_lines <= roll_cnt_lines + 1;
 				end
@@ -427,6 +464,8 @@ always @(posedge clk) begin
 		// 新键处理结束
 	end
 	
+	
+	end
 end
 
 
