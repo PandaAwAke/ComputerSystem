@@ -1,8 +1,20 @@
+# directories
 /project/db/
 /project/incremental_db/
+
+# Quartus
 *.done
 *.rpt
 *.smsg
 *.summary
 *.bak
 *.qdf
+*.sof
+*.jdi
+*.sld
+*.smsg
+*.qws
+*.pin
+
+# Videos
+*.mp4
