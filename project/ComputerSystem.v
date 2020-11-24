@@ -210,5 +210,16 @@ EchoExample mys_echoInteract(
 	.lineOut(lineOut)
 );
 
+// TEST
+assign LEDR[9] = in_newASCII_ready;
+assign LEDR[8] = out_newASCII_ready;
+reg [5:0] len_helper;
+always @(posedge CLOCK_50)
+begin
+	if (out_lineLen > 0)
+		len_helper <= out_lineLen;
+end
+assign LEDR[5:0] = len_helper;
+
 
 endmodule

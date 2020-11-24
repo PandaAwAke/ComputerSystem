@@ -35,6 +35,7 @@ end
 reg [7:0] buffer [31:0];
 reg [5:0] echo_len_help;	// 读取屏幕输入用的循环变量
 reg [5:0] echo_len_help2;	// 输出屏幕用的循环变量2，要从0循环到echo_len_help - 1
+reg received;					// 是否接收到了屏幕输入
 
 // 是否允许输出，在读屏幕输入的时候应该不能输出，此值为1才有资格输出
 // 可以改
@@ -44,48 +45,54 @@ wire output_valid = (!out_newASCII_ready);
 initial begin
 	echo_len_help = 0;
 	echo_len_help2 = 0;
+	received = 0;
 end
 
 always @(posedge clk) begin
 	// 从屏幕读入
 	if (lineOut_nextASCII) begin
 		lineOut_nextASCII <= 0;
-	end else if (out_newASCII_ready && echo_len_help < out_lineLen) begin
-		// 存入缓冲区，最后一位00照存
-		echo_len_help <= echo_len_help + 1;
+	end else if (out_newASCII_ready) begin
+		// 存入缓冲区，最后一位00也存
 		buffer[echo_len_help] <= lineOut;
-		if (lineOut == 0 || echo_len_help == out_lineLen) begin
-			// 结束读入逻辑
+		if (echo_len_help == out_lineLen) begin
+			// 读取结束，可以添加代码
+			received <= 1;
 		end else begin
-			// 未结束读入逻辑
+			lineOut_nextASCII <= 1;
+			echo_len_help <= echo_len_help + 1;
 		end
+			
 	end
 	
 	// 向屏幕输出，处理这个模块的ready信号
-	if (in_solved)
-		in_solved <= 0;
-	else if (in_newASCII_ready) begin
-		if (echo_len_help2 == echo_len_help) begin	// 相等，到头了
-			in_solved <= 1;
-			in_newASCII_ready <= 0;
-			// Clear操作
-			echo_len_help  <= 0;
-			echo_len_help2 <= 0;
-		end else if (lineIn_nextASCII)
-			echo_len_help2 <= echo_len_help2 + 1;
-	end
+	if (output_valid)
+		if (out_solved)
+			in_solved <= 0;
+		else if (in_newASCII_ready) begin
+			if (echo_len_help2 == echo_len_help) begin	// 相等，到头了，结束输出（可以改）
+				in_solved <= 1;
+				in_newASCII_ready <= 0;
+				// Clear操作
+				echo_len_help  <= 0;
+				echo_len_help2 <= 0;
+			end else if (lineIn_nextASCII)
+				echo_len_help2 <= echo_len_help2 + 1;
+		end
 	
 	
 	// 读取完屏幕输入，输出ready信号
 	// 可以改
-	if (output_valid && echo_len_help2 < echo_len_help)
+	if (output_valid && received) begin
 		in_newASCII_ready <= 1;
-	else 
-		in_newASCII_ready <= 0;
+		received <= 0;
+	end
 end
 
 
 assign lineIn = (
+	(echo_len_help2 == echo_len_help) ?
+	0 :
 	buffer[echo_len_help2]
 );
 

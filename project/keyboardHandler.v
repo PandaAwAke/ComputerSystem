@@ -116,11 +116,13 @@ always @(posedge clk) begin
 						preE0 <= 0;
 						state_E0[data] <= 1;
 						scanCode_E0 <= data;
+						scanCode <= 0;
 						buffer_newkey <= {buffer_newkey[1:0], 1'b1};
 					end else begin
 						// 从InitX到X
 						state[data] <= 1;
 						scanCode <= data;
+						scanCode_E0 <= 0;
 						buffer_newkey <= {buffer_newkey[1:0], 1'b1};
 					end
 				end
@@ -146,7 +148,7 @@ assign ASCII_helper = (
 	8'h2F		// 右边小键盘的斜杠
 );
 assign ASCII = (
-	(shift && scanCode != 0) ?
+	(shift && (scanCode != 0)) ?
 	shiftCase(ASCII_helper, capslock) :
 	(
 		(capslock == 1) ?
