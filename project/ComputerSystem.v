@@ -207,8 +207,12 @@ EchoExample mys_echoInteract(
 	.lineOut_nextASCII(lineOut_nextASCII),
 	.out_newASCII_ready(out_newASCII_ready),
 	.out_lineLen(out_lineLen),
-	.lineOut(lineOut)
+	.lineOut(lineOut),
+	////////////// TEST /////////
+	.echo_len_help(echo_len_help)
 );
+
+wire [5:0] echo_len_help;
 
 // TEST
 assign LEDR[9] = in_newASCII_ready;
@@ -216,8 +220,8 @@ assign LEDR[8] = out_newASCII_ready;
 reg [5:0] len_helper;
 always @(posedge CLOCK_50)
 begin
-	if (out_lineLen > 0)
-		len_helper <= out_lineLen;
+	if (echo_len_help > 0)
+		len_helper <= echo_len_help;
 end
 assign LEDR[5:0] = len_helper;
 

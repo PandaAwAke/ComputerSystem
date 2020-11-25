@@ -212,23 +212,29 @@ reg [7:0] 	keys_ASCII_help = 0;			// 写入内容
 
 // 主要逻辑块
 always @(posedge clk) begin
-	if (h_addr >= 630) begin
-		rgb <= 12'h0;
-	end else if (keys_index == cursor && cursor_en) begin // 光标部分
-		if (offsetY < 13)  // 光标高度为3(/16)
+	if (ROLL_CLEAR_FIRST_LINE)
+		rgb <= rgb;
+	else
+		if (h_addr >= 630) begin
+			rgb <= 12'h0;
+		end else if (keys_index == cursor && cursor_en) begin // 光标部分
+			if (offsetY < 13)  // 光标高度为3(/16)
+				rgb <= showcolor;
+			else
+				rgb <= 12'hFFF;
+		end else if (enter[keysY + roll_cnt_lines] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
+			rgb <= showcolor_header;
+		end else begin	// 正常部分
 			rgb <= showcolor;
-		else
-			rgb <= 12'hFFF;
-	end else if (enter[keysY + roll_cnt_lines] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
-		rgb <= showcolor_header;
-	end else begin	// 正常部分
-		rgb <= showcolor;
-	end
-	
+		end
 	
 	if (ROLL_CLEAR_FIRST_LINE) begin			// 滚屏到57行了，把后面的行都往上移一行
+		if (lineIn_nextASCII)
+			lineIn_nextASCII <= 0;
 		if (ROLL_CLEAR_ITER == 0) begin
 			// 清空第一行的初始化操作
+			if (flag_keys_write)
+				keys_index_helper <= keys_index_helper - 70;
 			cursor <= cursor - 70;
 			y_cnt <= y_cnt - 1;
 			roll_cnt <= roll_cnt - 70;
@@ -246,13 +252,8 @@ always @(posedge clk) begin
 			ROLL_CLEAR_FIRST_LINE <= 0;
 			ROLL_CLEAR_ITER <= 0;
 		end
-		
-	end else begin									// 不缩进了
-	
-	
-	ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 57);// 57行滚屏时清空第一行并移动后面所有的行
-	
-	
+	end
+	else
 	// 回车的下个周期：开始往外送数据，因为考虑到可能会引起57行之后的清空操作，所以隔一个周期处理
 	if (output_flag) begin
 		output_flag <= 0;
@@ -260,7 +261,9 @@ always @(posedge clk) begin
 		out_lineLen_help <= 0;
 		out_newASCII_ready <= 1;				// 空行也必须向外传递，否则无法完成处理
 		keyboard_valid <= 0;
-	end
+	end else
+	begin									// 不缩进了
+
 	
 	// Cashing-keys
 	if (flag_keys_write) begin					// 缓存机制：keys在下一个周期进行存储
@@ -269,7 +272,8 @@ always @(posedge clk) begin
 		flag_keys_write <= 0;
 		keys_ASCII_help <= 0;
 	end
-
+	
+	
 	if (out_solved)
 		out_solved <= 0;
 	else if (!keyboard_valid && in_solved) begin
@@ -298,13 +302,14 @@ always @(posedge clk) begin
 	if (!keyboard_valid)							// 键盘不能输入才执行，防止与顶层模块交互错误（保险机制）
 		if (lineIn_nextASCII) begin
 			lineIn_nextASCII <= 0;
-		end begin
+		end else begin
 			if (in_newASCII_ready) begin		// 有数据输入
 				lineIn_nextASCII <= 1;
 				if (lineIn == 0) begin			// 这行输出完了
 					y_cnt <= y_cnt + 1;
 					x_cnt <= 0;
 					cursor <= cursor + (70 - x_cnt);
+					ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 56);
 					
 					if (y_cnt >= 27) begin										// 27行后自动滚屏
 						roll_cnt <= roll_cnt + 70;
@@ -324,6 +329,7 @@ always @(posedge clk) begin
 					if (x_cnt == 69) begin
 						y_cnt <= y_cnt + 1;
 						x_cnt <= 0;
+						ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 56);
 						
 						if (y_cnt >= 27) begin									// 27行后自动滚屏
 							roll_cnt <= roll_cnt + 70;
@@ -379,6 +385,7 @@ always @(posedge clk) begin
 			y_cnt <= y_cnt + 1;
 			x_cnt <= 0;
 			cursor <= cursor + (70 - x_cnt);
+			ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 56);
 			
 			if (y_cnt >= 27) begin										// 27行后自动滚屏
 				roll_cnt <= roll_cnt + 70;
@@ -401,6 +408,7 @@ always @(posedge clk) begin
 			if (x_cnt == 69) begin
 				y_cnt <= y_cnt + 1;
 				x_cnt <= 0;
+				ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 56);
 				if (y_cnt >= 27) begin									// 27行后自动滚屏
 					roll_cnt <= roll_cnt + 70;
 					roll_cnt_lines <= roll_cnt_lines + 1;
