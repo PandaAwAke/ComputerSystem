@@ -86,6 +86,9 @@ wire [11:0] showcolor_header;
 reg [7:0] roll_cnt_lines;			// 滚屏滚掉多少行
 reg [12:0] roll_cnt;					// 滚屏滚掉的下标
 
+// 方向键标志
+wire direction_flag;
+
 initial begin
 	$readmemh("init_files/VGA_RAM.txt", vga_memory, 0, 4095);
 	$readmemh("init_files/zeroKeys.txt", keys, 0, 4199);
@@ -141,6 +144,11 @@ assign lineOut = (
 	buffer[out_lineLen_help]
 );
 
+// 方向键标志
+assign direction_flag = (
+	scanCode_E0 == 8'h75 || scanCode_E0 == 8'h72 || scanCode_E0 == 8'h74 || scanCode_E0 == 8'h6B
+);
+
 
 //=======================================================
 //  Posedge Detector
@@ -161,6 +169,30 @@ end
 //  VGA Showing Coding
 //=======================================================
 // 显示逻辑
+always @(negedge clk) begin
+	if (ROLL_CLEAR_FIRST_LINE)
+		rgb <= rgb;
+	else
+		if (h_addr >= 630) begin
+			rgb <= 12'h0;
+		end else if (keys_index == cursor && cursor_en) begin // 光标部分
+			if (insert) begin
+				if (offsetY < 11)  // Insert模式，光标高度为5(/16)
+					rgb <= showcolor;
+				else
+					rgb <= 12'hFFF;
+			end else begin
+				if (offsetY < 13)  // 非Insert模式，光标高度为3(/16)
+					rgb <= showcolor;
+				else
+					rgb <= 12'hFFF;
+			end
+		end else if (enter[keysY + roll_cnt_lines] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
+			rgb <= showcolor_header;
+		end else begin	// 正常部分
+			rgb <= showcolor;
+		end
+end
 
 
 
@@ -196,8 +228,6 @@ initial begin
 	
 	ROLL_CLEAR_FIRST_LINE = 0;
 	ROLL_CLEAR_ITER = 0;
-	//in_lineLen_help = 0;
-	
 	
 	keyboard_valid = 1;
 end
@@ -212,22 +242,6 @@ reg [7:0] 	keys_ASCII_help = 0;			// 写入内容
 
 // 主要逻辑块
 always @(posedge clk) begin
-	if (ROLL_CLEAR_FIRST_LINE)
-		rgb <= rgb;
-	else
-		if (h_addr >= 630) begin
-			rgb <= 12'h0;
-		end else if (keys_index == cursor && cursor_en) begin // 光标部分
-			if (offsetY < 13)  // 光标高度为3(/16)
-				rgb <= showcolor;
-			else
-				rgb <= 12'hFFF;
-		end else if (enter[keysY + roll_cnt_lines] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
-			rgb <= showcolor_header;
-		end else begin	// 正常部分
-			rgb <= showcolor;
-		end
-	
 	if (ROLL_CLEAR_FIRST_LINE) begin			// 滚屏到57行了，把后面的行都往上移一行
 		if (lineIn_nextASCII)
 			lineIn_nextASCII <= 0;
@@ -391,8 +405,21 @@ always @(posedge clk) begin
 				roll_cnt <= roll_cnt + 70;
 				roll_cnt_lines <= roll_cnt_lines + 1;
 			end
-			
-			
+		end else if (direction_flag) begin							// 方向键
+			case (scanCode_E0)
+				8'h75: begin	// 上
+					
+				end
+				8'h72: begin	// 下
+					
+				end
+				8'h6B: begin	// 左
+					
+				end
+				8'h74: begin	// 右
+					
+				end
+			endcase
 		end else if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
 			if (out_lineLen_help < 32) begin						// 维护输出字符串
 				out_lineLen_help <= out_lineLen_help + 1;
