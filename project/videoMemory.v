@@ -52,15 +52,18 @@ end
 
 parameter BASH_HEAD_LEN = 9;
 // 只读存储器
-reg [7:0] reg_keysX [639:0];		// h_addr对应的键X是多少 (0~69)
-reg [7:0] reg_keysY [479:0];		// v_addr对应的键Y是多少 (0~29)
-reg [11:0] keys_base [29:0];		// 第Y行字符对应的keys数组起始坐标
-reg [11:0] baseX [639:0];			// h_addr处的字符的起始值，如0~8对应0，9~17对应9
-reg [11:0] baseY [479:0];			// v_addr处的字符的起始值
-reg [11:0] ASCII_base [255:0];	// ASCII字符对应的vga_memory的基准位置
-
-// 读写存储器
-reg [11:0] vga_memory [4095:0];	// 字符显示存储器
+//reg [11:0] vga_memory [4095:0];
+//reg [7:0] reg_keysX [639:0];		// h_addr对应的键X是多少 (0~69)
+//reg [7:0] reg_keysY [479:0];		// v_addr对应的键Y是多少 (0~29)
+//reg [11:0] keys_base [29:0];		// 第Y行字符对应的keys数组起始坐标
+//reg [11:0] baseX [639:0];			// h_addr处的字符的起始值，如0~8对应0，9~17对应9
+//reg [11:0] baseY [479:0];			// v_addr处的字符的起始值
+wire [11:0] baseX_out;
+wire [11:0] baseY_out;
+wire [11:0] keys_base_out;
+//reg [11:0] ASCII_base [255:0];	// ASCII字符对应的vga_memory的基准位置
+wire [11:0] ASCII_base_out1;
+wire [11:0] ASCII_base_out2;
 reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 
 // wire计算变量
@@ -90,14 +93,7 @@ reg [12:0] roll_cnt;					// 滚屏滚掉的下标
 wire direction_flag;
 
 initial begin
-	$readmemh("init_files/VGA_RAM.txt", vga_memory, 0, 4095);
-	$readmemh("init_files/zeroKeys.txt", keys, 0, 4199);
-	$readmemh("init_files/reg_keysX.txt", reg_keysX, 0, 639);
-	$readmemh("init_files/reg_keysY.txt", reg_keysY, 0, 479);
-	$readmemh("init_files/keys_base.txt", keys_base, 0, 29);
-	$readmemh("init_files/baseX.txt", baseX, 0, 639);
-	$readmemh("init_files/baseY.txt", baseY, 0, 479);
-	$readmemh("init_files/ASCII_base.txt", ASCII_base, 0, 255);
+	//$readmemh("init_files/zeroKeys.txt", keys, 0, 4199);
 end
 
 
@@ -119,22 +115,74 @@ clkgen #(2) cursorclk(
 //  Wire Logical Coding
 //=======================================================
 
-assign keysX = reg_keysX[h_addr];
-assign keysY = reg_keysY[v_addr];
-assign keys_index = roll_cnt + keys_base[keysY] + keysX;
+// 读写存储器
+vga_memory vMemoryROM(
+	.address_a(vm_index),
+	.address_b(vm_index_header),
+	.clock(clk),
+	.q_a(line),
+	.q_b(line_header)
+);
+reg_keysX KeysXROM(
+	.address(h_addr),
+	.clock(clk),
+	.q(keysX)
+);
+reg_keysY KeysYROM(
+	.address(v_addr),
+	.clock(clk),
+	.q(keysY)
+);
+baseX baseXROM(
+	.address(h_addr),
+	.clock(clk),
+	.q(baseX_out)
+);
+baseY baseYROM(
+	.address(v_addr),
+	.clock(clk),
+	.q(baseY_out)
+);
+keys_base keys_baseROM(
+	.address(keysY),
+	.clock(clk),
+	.q(keys_base_out)
+);
+ASCII_base ASCII_baseROM(
+	.address_a(showASCII),
+	.address_b(Header(keysX)),
+	.clock(clk),
+	.q_a(ASCII_base_out1),
+	.q_b(ASCII_base_out2)
+);
+
+//assign keysX = reg_keysX[h_addr];
+//assign keysY = reg_keysY[v_addr];
+//assign keys_index = roll_cnt + keys_base[keysY] + keysX;
+assign keys_index = roll_cnt + keys_base_out + keysX;
 // 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
 assign showASCII = keys[keys_index];
 
 // 应该显示的ASCII位置
-assign offsetX = h_addr - baseX[h_addr];
-assign offsetY = v_addr - baseY[v_addr];
+//assign offsetX = h_addr - baseX[h_addr];
+//assign offsetY = v_addr - baseY[v_addr];
+assign offsetX = h_addr - baseX_out;
+assign offsetY = v_addr - baseY_out;
 
-assign vm_index = ASCII_base[showASCII] + offsetY;
-assign line = vga_memory[vm_index];
+//assign vm_index = ASCII_base[showASCII] + offsetY;
+assign vm_index = ASCII_base_out1 + offsetY;
+
+//assign line = vga_memory[vm_index];
+
+
 assign showcolor = line[offsetX] ? 12'hFFF : 12'h0;
 // 命令提示符
-assign vm_index_header = ASCII_base[Header(keysX)] + offsetY;
-assign line_header = vga_memory[vm_index_header];
+//assign vm_index_header = ASCII_base[Header(keysX)] + offsetY;
+assign vm_index_header = ASCII_base_out2 + offsetY;
+
+//assign line_header = vga_memory[vm_index_header];
+
+
 assign showcolor_header = line_header[offsetX] ? 12'hFFF : 12'h0;
 
 // 输出
