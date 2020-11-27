@@ -18,7 +18,7 @@ module EchoExample(
 	output	reg	lineOut_nextASCII,	// 读好一个字符之后应该传递1一个周期
 	input				out_newASCII_ready,	// 这一行还没传递完就是1
 	input		[5:0] out_lineLen,			// 约定合法的一行最长32字符，值为实际长度
-	input		[7:0]	lineOut,					// 接收的字符
+	input		[7:0]	lineOut					// 接收的字符
 	////////// TEST /////////////
 	//output   reg	[5:0] echo_len_help
 );

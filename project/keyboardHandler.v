@@ -27,7 +27,12 @@ module keyboardHandler(
 //=======================================================
 
 // ASCII的LUT
-(* ram_init_file = "init_files/scancode.mif" *) reg [7:0] lookupTable [255:0];
+wire [7:0] LUT_ASCII;
+lookupTable LUT(
+	.address(scanCode),
+	.clock(clk),
+	.q(LUT_ASCII)
+);
 
 wire [7:0] data;
 wire ready;
@@ -144,7 +149,7 @@ assign insert = state_E0[112] | insertflag;
 assign newKey = buffer_newkey[2];
 assign ASCII_helper = (
 	(scanCode != 0) ? 
-	lookupTable[scanCode] :
+	LUT_ASCII :
 	8'h2F		// 右边小键盘的斜杠
 );
 assign ASCII = (
@@ -180,6 +185,7 @@ assign isASCIIkey = (
 function [7:0] shiftCase;
 	input [7:0] rawCase;
 	input capslock;
+	begin
 	if (rawCase >= 8'h61 && rawCase <= 8'h7A)
 		if (capslock == 0)
 			shiftCase = rawCase - 8'h20;
@@ -194,14 +200,17 @@ function [7:0] shiftCase;
 		8'h5D: shiftCase = 8'h7D; 8'h3B: shiftCase = 8'h3A; 8'h27: shiftCase = 8'h22;
 		8'h2C: shiftCase = 8'h3C; 8'h2E: shiftCase = 8'h3E; 8'h2F: shiftCase = 8'h3F;
 	endcase
+	end
 endfunction
 
 function [7:0] capslockCase;
 	input [7:0] rawCase;
+	begin
 	if (rawCase >= 8'h61 && rawCase <= 8'h7A)
 		capslockCase = rawCase - 8'h20;
 	else
 		capslockCase = rawCase;
+	end
 endfunction
 
 endmodule
