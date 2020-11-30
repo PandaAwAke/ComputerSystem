@@ -99,6 +99,8 @@ wire [11:0] rgb;
 // 显存接口模块接线
 wire in_solved;
 wire out_solved;
+wire in_require_line;
+wire out_require_line;
 
 wire lineIn_nextASCII;
 wire in_newASCII_ready;
@@ -181,6 +183,8 @@ videoMemory mys_vmemory(
 	//////////// Interface ///////////
 	.in_solved(in_solved),
 	.out_solved(out_solved),
+	.in_require_line(in_require_line),
+	.out_require_line(out_require_line),
 	
 	.lineIn_nextASCII(lineIn_nextASCII),
 	.in_newASCII_ready(in_newASCII_ready),
@@ -199,6 +203,8 @@ EchoExample mys_echoInteract(
 	//////////// Video Memory : Solved Signal ///////////
 	.in_solved(in_solved),
 	.out_solved(out_solved),
+	.in_require_line(in_require_line),
+	.out_require_line(out_require_line),
 
 	.lineIn_nextASCII(lineIn_nextASCII),				
 	.in_newASCII_ready(in_newASCII_ready),
@@ -208,22 +214,6 @@ EchoExample mys_echoInteract(
 	.out_newASCII_ready(out_newASCII_ready),
 	.out_lineLen(out_lineLen),
 	.lineOut(lineOut)
-	////////////// TEST /////////
-	//.echo_len_help(echo_len_help)
 );
-
-//wire [5:0] echo_len_help;
-//
-//// TEST
-//assign LEDR[9] = in_newASCII_ready;
-//assign LEDR[8] = out_newASCII_ready;
-//reg [5:0] len_helper;
-//always @(posedge CLOCK_50)
-//begin
-//	if (echo_len_help > 0)
-//		len_helper <= echo_len_help;
-//end
-//assign LEDR[5:0] = len_helper;
-
 
 endmodule

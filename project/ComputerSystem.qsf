@@ -426,5 +426,5 @@ set_instance_assignment -name PARTITION_HIERARCHY mysvg_77f21 -to "clkgen:mys_vg
 set_instance_assignment -name PARTITION_HIERARCHY myskb_34d71 -to "keyboardHandler:mys_kbHandler" -section_id "keyboardHandler:mys_kbHandler"
 set_instance_assignment -name PARTITION_HIERARCHY vgaco_00f71 -to "vga_ctrl:vga_control" -section_id "vga_ctrl:vga_control"
 set_instance_assignment -name PARTITION_HIERARCHY mysvm_e3ab1 -to "videoMemory:mys_vmemory" -section_id "videoMemory:mys_vmemory"
-set_instance_assignment -name PARTITION_HIERARCHY vassi_98a31 -to "videoMemory:mys_vmemory|videoMemory_assign:vAssign" -section_id "videoMemory_assign:vAssign"
 set_instance_assignment -name PARTITION_HIERARCHY vstor_3c251 -to "videoMemory:mys_vmemory|videoMemoryStorage:vStorage" -section_id "videoMemoryStorage:vStorage"
+set_instance_assignment -name PARTITION_HIERARCHY vassi_98a31 -to "videoMemory:mys_vmemory|videoMemory_assign:vAssign" -section_id "videoMemory_assign:vAssign"

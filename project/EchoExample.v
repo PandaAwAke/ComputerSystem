@@ -6,8 +6,10 @@ module EchoExample(
 	input		clk,
 	//////////// Video Memory : Solved Signal ///////////
 	// 下面的 In, Out 应该看作显存处理视角的
-	output	reg	in_solved,				// 结束信号，解决完这条指令后传递1一个周期
-	input				out_solved,				// 显存模块处理完结束信号会输出1一个周期进来
+	output	reg	in_solved,				// 结束信号，解决完这条指令后传递1
+	input				out_solved,				// 显存模块处理完结束信号会输出1一个周期，这时让in_solved=0
+	output	reg	in_require_line,		// 如果需要屏幕继续输入数据，置它为1
+	input				out_require_line,		// VideoMemory进入输入模式会输出1一个周期，这时让in_require_line=0
 	
 	// 向屏幕输出信息，外部模块应该注意最后一位是00
 	input				lineIn_nextASCII,				
@@ -29,7 +31,7 @@ initial begin
 	in_solved = 0;
 	in_newASCII_ready = 0;
 	lineOut_nextASCII = 0;
-	
+	in_require_line = 0;
 	
 end
 
@@ -38,6 +40,9 @@ reg [7:0] buffer [31:0];
 reg [5:0] echo_len_help;	// 读取屏幕输入用的循环变量，也是读入的实际长度
 reg [5:0] echo_len_help2;	// 输出屏幕用的循环变量2，要从0循环到echo_len_help
 reg received;					// 是否接收到了屏幕输入
+
+///////// TEST : Echo三行 //////////
+reg [3:0] line_count = 0;
 
 // 是否允许输出，在读屏幕输入的时候应该不能输出，此值为1才有资格输出
 // 可以改
@@ -66,17 +71,29 @@ always @(posedge clk) begin
 		end
 	end
 	
+	
+	if (out_require_line)
+		in_require_line <= 0;
+	
 	// 向屏幕输出，处理这个模块的ready信号
 	if (output_valid)
 		if (out_solved)
 			in_solved <= 0;
 		else if (in_newASCII_ready) begin
 			if (echo_len_help2 == echo_len_help) begin	// 相等，到头了，结束输出（可以改）
-				in_solved <= 1;
-				in_newASCII_ready <= 0;
+				//////////// TEST : Echo三行才结束 ////////////
+				if (line_count == 2) begin
+					in_solved <= 1;
+					line_count <= 0;
+					in_require_line <= 0;
+				end else begin
+					line_count <= line_count + 1;
+					in_require_line <= 1;
+				end
 				// Clear操作
 				echo_len_help  <= 0;
 				echo_len_help2 <= 0;
+				in_newASCII_ready <= 0;
 			end else if (lineIn_nextASCII)
 				echo_len_help2 <= echo_len_help2 + 1;
 		end

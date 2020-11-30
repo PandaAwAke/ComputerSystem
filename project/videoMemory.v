@@ -24,6 +24,8 @@ module videoMemory(
 	//////////// Interface ///////////
 	input				in_solved,						// 结束信号，解决完这条指令后传递1一个周期进这个模块
 	output	reg	out_solved,						// 本模块处理完结束信号会输出1一个周期
+	input				in_require_line,					// 需要输入一行数据
+	output	reg	out_require_line,					// 知道了，然后我开始输入（配合滚屏）
 	
 	// 外界模块输入bash输出信息，外部模块应该注意最后一位是00
 	output	reg	lineIn_nextASCII,
@@ -184,7 +186,6 @@ always @(negedge clk) begin
 end
 
 
-
 //=======================================================
 //  Controling RAM/REGs Coding
 //=======================================================
@@ -297,6 +298,15 @@ begin
 		out_solved <= 1;
 		enter[y_cnt] <= 1; 	// 新的命令提示符
 	end
+	
+	///////////////// Require new line //////////////////////////
+	if (!in_newASCII_ready && in_require_line) begin
+		keyboard_valid <= 1;
+		out_require_line <= 1;
+	end
+	
+	if (out_require_line)
+		out_require_line <= 0;
 	
 	///////////////// Output lineOut Coding /////////////////////
 	// 屏幕输入，向外界输出逻辑
