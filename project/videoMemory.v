@@ -47,35 +47,28 @@ initial begin
 end
 
 //=======================================================
-//  PARAMETER/REG/WIRE declarations
+//  PARAMETER declarations
 //=======================================================
-
 parameter BASH_HEAD_LEN = 9;
-// 只读存储器
-//reg [11:0] vga_memory [4095:0];
-//reg [7:0] reg_keysX [639:0];		// h_addr对应的键X是多少 (0~69)
-//reg [7:0] reg_keysY [479:0];		// v_addr对应的键Y是多少 (0~29)
-//reg [11:0] keys_base [29:0];		// 第Y行字符对应的keys数组起始坐标
-//reg [11:0] baseX [639:0];			// h_addr处的字符的起始值，如0~8对应0，9~17对应9
-//reg [11:0] baseY [479:0];			// v_addr处的字符的起始值
+//=======================================================
+//  Showing Wire & Storage Logical Coding
+//=======================================================
+// ROMs
 wire [11:0] baseX_out;
 wire [11:0] baseY_out;
 wire [11:0] keys_base_out;
-//reg [11:0] ASCII_base [255:0];	// ASCII字符对应的vga_memory的基准位置
 wire [11:0] ASCII_base_out1;
 wire [11:0] ASCII_base_out2;
-reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 
 // wire计算变量
 wire [7:0] keysX;
 wire [7:0] keysY;
-wire [12:0] keys_index;				// 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
-wire [7:0] showASCII;				// 应该显示的ASCII位置下标
+wire [12:0] keys_index;		// 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
+wire [7:0] showASCII;		// 应该显示的ASCII位置下标
 
 // 显示位置
 wire [7:0] offsetX;
 wire [7:0] offsetY;
-
 wire [11:0] vm_index;
 wire [11:0] line;
 wire [11:0] showcolor;
@@ -85,130 +78,78 @@ wire [11:0] vm_index_header;
 wire [11:0] line_header;
 wire [11:0] showcolor_header;
 
-// 滚屏记录
-reg [7:0] roll_cnt_lines;			// 滚屏滚掉多少行
-reg [12:0] roll_cnt;					// 滚屏滚掉的下标
-
-// 方向键标志
-wire direction_flag;
-
-initial begin
-	//$readmemh("init_files/zeroKeys.txt", keys, 0, 4199);
-end
-
-
-//=======================================================
-//  Structural Coding
-//=======================================================
-
-wire cursor_en;						// 光标使能端
-// 光标显示使能端部分开始
-clkgen #(2) cursorclk(
-	.clkin(clk), 
-	.rst(0), 
-	.clken(1), 
-	.clkout(cursor_en)
-);
-// 光标显示使能端部分结束
-
-//=======================================================
-//  Wire Logical Coding
-//=======================================================
-
-// 读写存储器
-vga_memory vMemoryROM(
-	.address_a(vm_index),
-	.address_b(vm_index_header),
-	.clock(clk),
-	.q_a(line),
-	.q_b(line_header)
-);
-reg_keysX KeysXROM(
-	.address(h_addr),
-	.clock(clk),
-	.q(keysX)
-);
-reg_keysY KeysYROM(
-	.address(v_addr),
-	.clock(clk),
-	.q(keysY)
-);
-baseX baseXROM(
-	.address(h_addr),
-	.clock(clk),
-	.q(baseX_out)
-);
-baseY baseYROM(
-	.address(v_addr),
-	.clock(clk),
-	.q(baseY_out)
-);
-keys_base keys_baseROM(
-	.address(keysY),
-	.clock(clk),
-	.q(keys_base_out)
-);
-ASCII_base ASCII_baseROM(
-	.address_a(showASCII),
-	.address_b(Header(keysX)),
-	.clock(clk),
-	.q_a(ASCII_base_out1),
-	.q_b(ASCII_base_out2)
-);
-
-//assign keysX = reg_keysX[h_addr];
-//assign keysY = reg_keysY[v_addr];
-//assign keys_index = roll_cnt + keys_base[keysY] + keysX;
-assign keys_index = roll_cnt + keys_base_out + keysX;
-// 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
-assign showASCII = keys[keys_index];
-
-// 应该显示的ASCII位置
-//assign offsetX = h_addr - baseX[h_addr];
-//assign offsetY = v_addr - baseY[v_addr];
-assign offsetX = h_addr - baseX_out;
-assign offsetY = v_addr - baseY_out;
-
-//assign vm_index = ASCII_base[showASCII] + offsetY;
-assign vm_index = ASCII_base_out1 + offsetY;
-
-//assign line = vga_memory[vm_index];
-
-
-assign showcolor = line[offsetX] ? 12'hFFF : 12'h0;
-// 命令提示符
-//assign vm_index_header = ASCII_base[Header(keysX)] + offsetY;
-assign vm_index_header = ASCII_base_out2 + offsetY;
-
-//assign line_header = vga_memory[vm_index_header];
-
-
-assign showcolor_header = line_header[offsetX] ? 12'hFFF : 12'h0;
-
-// 输出
+// 输出总线
 assign lineOut = (
 	(out_lineLen_help == out_lineLen) ?
 	0 :
 	buffer[out_lineLen_help]
 );
 
-// 方向键标志
-assign direction_flag = (
-	scanCode_E0 == 8'h75 || scanCode_E0 == 8'h72 || scanCode_E0 == 8'h74 || scanCode_E0 == 8'h6B
+// 在 (h_addr, v_addr) 处应该显示的 ASCII 字符
+assign showASCII = keys[keys_index];
+videoMemoryStorage vStorage(
+	.clk(clk),
+// 字符显示文件
+	.vm_index(vm_index),
+	.vm_index_header(vm_index_header),
+	.line(line),
+	.line_header(line_header),
+// reg_keysX 和 reg_keysY
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.keysX(keysX),
+	.keysY(keysY),
+// baseX 和 baseY
+	.baseX_out(baseX_out),
+	.baseY_out(baseY_out),
+// keys_base
+	.keys_base_out(keys_base_out),
+// ASCII_base
+	.showASCII(showASCII),
+	.ASCII_base_out1(ASCII_base_out1),
+	.ASCII_base_out2(ASCII_base_out2)
 );
 
+videoMemory_assign vAssign(
+// INPUTS
+	.roll_cnt(roll_cnt),
+	.keys_base_out(keys_base_out),
+	.keysX(keysX),
+	.h_addr(h_addr),
+	.baseX_out(baseX_out),
+	.v_addr(v_addr),
+	.baseY_out(baseY_out),
+	.ASCII_base_out1(ASCII_base_out1),
+	.ASCII_base_out2(ASCII_base_out2),
+	.line(line),
+	.line_header(line_header),
+	.scanCode_E0(scanCode_E0),
+// OUTPUTS
+	.keys_index(keys_index),
+	.offsetX(offsetX),
+	.offsetY(offsetY),
+	.vm_index(vm_index),
+	.showcolor(showcolor),
+	.vm_index_header(vm_index_header),
+	.showcolor_header(showcolor_header),
+	.direction_flag(direction_flag)
+);
+// 光标显示使能端
+clkgen #(2) cursorclk(
+	.clkin(clk), 
+	.rst(0), 
+	.clken(1), 
+	.clkout(cursor_en)
+);
 
 //=======================================================
 //  Posedge Detector
 //=======================================================
-
 reg [2:0] newKey_sync;
 wire sampling_newKey = ~newKey_sync[2] & newKey_sync[1];
-
 initial begin
 	newKey_sync = 0;
 end
-
 always @(posedge clk) begin
 	newKey_sync <= {newKey_sync[1:0], newKey};
 end
@@ -245,10 +186,21 @@ end
 
 
 //=======================================================
-//  Keyboard Handling Coding
+//  Controling RAM/REGs Coding
 //=======================================================
+// keys-RAM
+reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 
 // 控制变量
+// 滚屏记录
+reg [7:0]  roll_cnt_lines;			// 滚屏滚掉多少行
+reg [12:0] roll_cnt;					// 滚屏滚掉的下标
+
+// 方向键标志
+wire direction_flag;
+// 光标使能端
+wire cursor_en;
+
 reg [12:0] cursor;					// 光标，取值范围：0~2100
 reg [7:0] x_cnt;						// 当前水平方向已经有多少个字符，范围0~69
 reg [7:0] y_cnt;						// 当前竖直方向已经有多少行，范围0~59
@@ -259,7 +211,6 @@ reg [7:0] buffer 	[31:0];
 
 reg ROLL_CLEAR_FIRST_LINE;			// 滚屏太多清除第一行
 reg [12:0] ROLL_CLEAR_ITER;		// 滚屏清除第一行用的循环变量
-
 
 reg keyboard_valid;					// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
 reg output_flag;						// 这个时钟周期应该开始输出数据，是为了和57行清屏配合的
@@ -283,13 +234,14 @@ end
 
 // Cashing, 防止织毛衣
 // 防止织毛衣，下一个周期再去存储器存
-//////////// keys ////////////
+//////////// keys cashing ////////////
 reg [12:0]	keys_index_helper = 0;		// keys的下标
 reg 			flag_keys_write = 0;			// 写入flag标记，为1则写入
 reg [7:0] 	keys_ASCII_help = 0;			// 写入内容
 
 // 主要逻辑块
 always @(posedge clk) begin
+	///////////////// Screen Rolling Coding /////////////////////
 	if (ROLL_CLEAR_FIRST_LINE) begin			// 滚屏到57行了，把后面的行都往上移一行
 		if (lineIn_nextASCII)
 			lineIn_nextASCII <= 0;
@@ -316,6 +268,7 @@ always @(posedge clk) begin
 		end
 	end
 	else
+	///////////////// Start to output lineOut Coding /////////////////////
 	// 回车的下个周期：开始往外送数据，因为考虑到可能会引起57行之后的清空操作，所以隔一个周期处理
 	if (output_flag) begin
 		output_flag <= 0;
@@ -324,10 +277,8 @@ always @(posedge clk) begin
 		out_newASCII_ready <= 1;				// 空行也必须向外传递，否则无法完成处理
 		keyboard_valid <= 0;
 	end else
-	begin									// 不缩进了
-
-	
-	// Cashing-keys
+begin
+	///////////////// keys cashing /////////////////////
 	if (flag_keys_write) begin					// 缓存机制：keys在下一个周期进行存储
 		keys[keys_index_helper] <= keys_ASCII_help;
 		keys_index_helper <= 0;
@@ -335,7 +286,7 @@ always @(posedge clk) begin
 		keys_ASCII_help <= 0;
 	end
 	
-	
+	///////////////// Finish Output lineOut Coding /////////////////////
 	if (out_solved)
 		out_solved <= 0;
 	else if (!keyboard_valid && in_solved) begin
@@ -347,7 +298,7 @@ always @(posedge clk) begin
 		enter[y_cnt] <= 1; 	// 新的命令提示符
 	end
 	
-	
+	///////////////// Output lineOut Coding /////////////////////
 	// 屏幕输入，向外界输出逻辑
 	if (!keyboard_valid)							// 键盘不能输入才执行，防止与顶层模块交互错误（保险机制）
 		if (out_newASCII_ready) begin			// 数据输出逻辑
@@ -359,7 +310,7 @@ always @(posedge clk) begin
 			end
 		end
 	
-	
+	///////////////// Input lineIn Coding /////////////////////
 	// 外界输入，向屏幕输出逻辑
 	if (!keyboard_valid)							// 键盘不能输入才执行，防止与顶层模块交互错误（保险机制）
 		if (lineIn_nextASCII) begin
@@ -377,7 +328,6 @@ always @(posedge clk) begin
 						roll_cnt <= roll_cnt + 70;
 						roll_cnt_lines <= roll_cnt_lines + 1;
 					end
-					
 					
 				end else begin
 					// 后续输出到屏幕逻辑
@@ -405,13 +355,11 @@ always @(posedge clk) begin
 		end
 
 	
-	
-	
-	// 新按键逻辑
+	///////////////// newKey Coding /////////////////////
 	if (sampling_newKey && keyboard_valid) begin
 		// 新键处理开始
-		if (scanCode == 8'h66 && cursor > 0) begin 				// 退格键，有格可退
-			
+		///////////////// Backspace /////////////////////
+		if (scanCode == 8'h66 && cursor > 0) begin 				// 有格可退
 			// keys[cursor - 1] <= 0;
 			// 防止织毛衣，交给下个周期做
 			flag_keys_write <= 1;
@@ -419,7 +367,8 @@ always @(posedge clk) begin
 			keys_ASCII_help <= 0;
 			
 			// 处理x_cnt和y_cnt
-			if (enter[y_cnt] && x_cnt == BASH_HEAD_LEN) begin	// 命令提示符到头了
+			if (enter[y_cnt] && x_cnt == BASH_HEAD_LEN) begin	// 命令提示符这行到头了
+				// Do nothing
 				out_lineLen_help <= 0;
 			end else if (x_cnt == 0) begin							// 回到上一行逻辑(这一行无命令提示符)
 				if (y_cnt > 0) begin
@@ -427,8 +376,6 @@ always @(posedge clk) begin
 					x_cnt <= 69;
 					y_cnt <= y_cnt - 1;
 					cursor <= cursor - 1;
-					
-					enter[y_cnt] <= 0;
 					if (roll_cnt_lines > 0) begin
 						roll_cnt <= roll_cnt - 70;
 						roll_cnt_lines <= roll_cnt_lines - 1;
@@ -441,7 +388,9 @@ always @(posedge clk) begin
 				x_cnt <= x_cnt - 1;
 				cursor <= cursor - 1;
 			end
-		end else if (scanCode == 8'h5A || scanCode_E0 == 8'h5A) begin	// 回车键
+		end else
+		///////////////// Enter /////////////////////
+		if (scanCode == 8'h5A || scanCode_E0 == 8'h5A) begin	// 回车键
 			output_flag <= 1;
 			
 			y_cnt <= y_cnt + 1;
@@ -453,7 +402,9 @@ always @(posedge clk) begin
 				roll_cnt <= roll_cnt + 70;
 				roll_cnt_lines <= roll_cnt_lines + 1;
 			end
-		end else if (direction_flag) begin							// 方向键
+		end else
+		///////////////// Direction Key /////////////////////
+		if (direction_flag) begin							// 方向键
 			case (scanCode_E0)
 				8'h75: begin	// 上
 					
@@ -468,7 +419,9 @@ always @(posedge clk) begin
 					
 				end
 			endcase
-		end else if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
+		end else
+		///////////////// Other ASCII Key /////////////////////
+		if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
 			if (out_lineLen_help < 32) begin						// 维护输出字符串
 				out_lineLen_help <= out_lineLen_help + 1;
 				buffer[out_lineLen_help] <= ASCII;
@@ -495,30 +448,6 @@ always @(posedge clk) begin
 		// 新键处理结束
 	end
 	
-	
-	end
 end
-
-
-
-//=======================================================
-//  Functions
-//=======================================================
-
-function [7:0] Header;  // 命令提示符内容: SSshell
-	input [7:0] index;
-	case (index)
-		0: Header = 8'h53;
-		1: Header = 8'h53;
-		2: Header = 8'h73;
-		3: Header = 8'h68;
-		4: Header = 8'h65;
-		5: Header = 8'h6C;
-		6: Header = 8'h6C;
-		7: Header = 8'h24;
-		8: Header = 8'h20;
-		default: Header = 0;
-	endcase
-endfunction
-
+end
 endmodule
