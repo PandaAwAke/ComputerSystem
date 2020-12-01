@@ -108,7 +108,7 @@ wire [7:0] lineIn;
 
 wire lineOut_nextASCII;
 wire out_newASCII_ready;
-wire [5:0] out_lineLen;
+wire [12:0] out_lineLen;
 wire [7:0] lineOut;
 
 //=======================================================

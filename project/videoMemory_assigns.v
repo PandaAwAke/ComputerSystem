@@ -15,6 +15,8 @@ module videoMemory_assign(
 	input		[11:0]	line,
 	input		[11:0]	line_header,
 	input		[7:0]		scanCode_E0,
+	input		[11:0]	color_background,
+	input		[11:0]	color_text,
 	
 // OUTPUTS
 	output	[12:0]	keys_index,
@@ -32,10 +34,10 @@ assign keys_index = roll_cnt + keys_base_out + keysX;
 assign offsetX = h_addr - baseX_out;
 assign offsetY = v_addr - baseY_out;
 assign vm_index = ASCII_base_out1 + offsetY;
-assign showcolor = line[offsetX] ? 12'hFFF : 12'h0;
+assign showcolor = line[offsetX] ? color_text : color_background;
 // 命令提示符
 assign vm_index_header = ASCII_base_out2 + offsetY;
-assign showcolor_header = line_header[offsetX] ? 12'hFFF : 12'h0;
+assign showcolor_header = line_header[offsetX] ? color_text : color_background;
 // 方向键标志
 assign direction_flag = (
 	scanCode_E0 == 8'h75 || scanCode_E0 == 8'h72 || scanCode_E0 == 8'h74 || scanCode_E0 == 8'h6B

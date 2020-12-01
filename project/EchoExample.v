@@ -19,12 +19,13 @@ module EchoExample(
 	// 读取bash输入信息，注意读入的长度不超过32且最后一位是00
 	output	reg	lineOut_nextASCII,	// 读好一个字符之后应该传递1一个周期
 	input				out_newASCII_ready,	// 这一行还没传递完就是1
-	input		[5:0] out_lineLen,			// 约定合法的一行最长32字符，值为实际长度
+	input		[12:0] out_lineLen,			// 约定合法的一行最长32字符，值为实际长度
 	input		[7:0]	lineOut					// 接收的字符
 	////////// TEST /////////////
 	//output   reg	[5:0] echo_len_help
 );
 
+parameter BUFFER_LEN = 128;
 
 initial begin
 	// output
@@ -36,9 +37,9 @@ initial begin
 end
 
 
-reg [7:0] buffer [31:0];
-reg [5:0] echo_len_help;	// 读取屏幕输入用的循环变量，也是读入的实际长度
-reg [5:0] echo_len_help2;	// 输出屏幕用的循环变量2，要从0循环到echo_len_help
+reg [7:0] buffer [BUFFER_LEN-1 : 0];
+reg [12:0] echo_len_help;	// 读取屏幕输入用的循环变量，也是读入的实际长度
+reg [12:0] echo_len_help2;	// 输出屏幕用的循环变量2，要从0循环到echo_len_help
 reg received;					// 是否接收到了屏幕输入
 
 ///////// TEST : Echo三行 //////////

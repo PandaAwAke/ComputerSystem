@@ -30,12 +30,12 @@ module videoMemory(
 	// 外界模块输入bash输出信息，外部模块应该注意最后一位是00
 	output	reg	lineIn_nextASCII,
 	input				in_newASCII_ready,			// 这一行的ready，这一行结束时应该为0
-	input				[7:0]		lineIn,				// 输入，最长64字符，应该按照in_lineLen取
+	input				[7:0]		lineIn,				// 输入
 	
 	// 向外界模块输出bash输入信息，外部模块应该注意最后一位是00
 	input				lineOut_nextASCII,			// 外界模块读好一个字符之后应该传递1进来一个周期
 	output	reg	out_newASCII_ready,	
-	output	reg	[5:0] 	out_lineLen,		// 约定合法的一行最长32字符+00结束，值为实际长度
+	output	reg	[12:0] 	out_lineLen,		// 约定合法的一行最长BUFFER_LEN字符+00结束，值为实际长度
 	output			[7:0]		lineOut				// 输出，一个一个输出
 );
 
@@ -52,6 +52,7 @@ end
 //  PARAMETER declarations
 //=======================================================
 parameter BASH_HEAD_LEN = 9;
+parameter BUFFER_LEN = 128;
 //=======================================================
 //  Showing Wire & Storage Logical Coding
 //=======================================================
@@ -79,6 +80,29 @@ wire [11:0] showcolor;
 wire [11:0] vm_index_header;
 wire [11:0] line_header;
 wire [11:0] showcolor_header;
+
+// 控制台配色，一共四种，按上下左右键切换
+reg  [1:0]	vout_color_iterator;
+reg  [11:0]	vout_color_background[3:0];
+reg  [11:0]	vout_color_text[3:0];
+wire [11:0]	current_vout_color_background = vout_color_background[vout_color_iterator];
+wire [11:0]	current_vout_color_text = vout_color_text[vout_color_iterator];
+
+initial begin
+	vout_color_iterator = 0; // Default
+	// Scheme 1 (Default, Up)
+	vout_color_background[0] = 12'h000;
+	vout_color_text[0] = 12'hFFF;
+	// Scheme 2 (Right)
+	vout_color_background[1] = 12'hDED;
+	vout_color_text[1] = 12'h000;
+	// Scheme 3 (Down)
+	vout_color_background[2] = 12'h8CF;
+	vout_color_text[2] = 12'h000;
+	// Scheme 4 (Left)
+	vout_color_background[3] = 12'h567;
+	vout_color_text[3] = 12'hFCD;
+end
 
 // 输出总线
 assign lineOut = (
@@ -126,6 +150,8 @@ videoMemory_assign vAssign(
 	.line(line),
 	.line_header(line_header),
 	.scanCode_E0(scanCode_E0),
+	.color_background(current_vout_color_background),
+	.color_text(current_vout_color_text),
 // OUTPUTS
 	.keys_index(keys_index),
 	.offsetX(offsetX),
@@ -165,18 +191,18 @@ always @(negedge clk) begin
 		rgb <= rgb;
 	else
 		if (h_addr >= 630) begin
-			rgb <= 12'h0;
+			rgb <= current_vout_color_background;
 		end else if (keys_index == cursor && cursor_en) begin // 光标部分
 			if (insert) begin
 				if (offsetY < 11)  // Insert模式，光标高度为5(/16)
 					rgb <= showcolor;
 				else
-					rgb <= 12'hFFF;
+					rgb <= current_vout_color_text;
 			end else begin
 				if (offsetY < 13)  // 非Insert模式，光标高度为3(/16)
 					rgb <= showcolor;
 				else
-					rgb <= 12'hFFF;
+					rgb <= current_vout_color_text;
 			end
 		end else if (enter[keysY + roll_cnt_lines] && keysX < BASH_HEAD_LEN) begin	// 命令提示符
 			rgb <= showcolor_header;
@@ -202,19 +228,23 @@ wire direction_flag;
 // 光标使能端
 wire cursor_en;
 
-reg [12:0] cursor;					// 光标，取值范围：0~2100
-reg [7:0] x_cnt;						// 当前水平方向已经有多少个字符，范围0~69
-reg [7:0] y_cnt;						// 当前竖直方向已经有多少行，范围0~59
-reg [59:0] enter;						// 记录这一行是否为回车产生的
+reg [12:0] cursor;						// 光标，取值范围：0~2100
+reg [7:0] x_cnt;							// 当前水平方向已经有多少个字符，范围0~69
+reg [7:0] y_cnt;							// 当前竖直方向已经有多少行，范围0~59
+reg [59:0] enter;							// 记录这一行是否为回车产生的
 
-reg [5:0] out_lineLen_help;		// 向外输出长度的辅助变量
-reg [7:0] buffer 	[31:0];
+reg [12:0] out_lineLen_help;			// 向外输出长度的辅助变量
+reg [7:0] buffer 	[BUFFER_LEN-1 : 0];
 
-reg ROLL_CLEAR_FIRST_LINE;			// 滚屏太多清除第一行
-reg [12:0] ROLL_CLEAR_ITER;		// 滚屏清除第一行用的循环变量
+reg ROLL_CLEAR_FIRST_LINE;				// 滚屏太多清除第一行
+reg [12:0] ROLL_CLEAR_ITER;			// 滚屏清除第一行用的循环变量
 
-reg keyboard_valid;					// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
-reg output_flag;						// 这个时钟周期应该开始输出数据，是为了和57行清屏配合的
+reg keyboard_valid;						// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
+reg output_flag;							// 这个时钟周期应该开始输出数据，是为了和57行清屏配合的
+reg running_program;						// 是否正在运行程序，如果正在运行程序退格时可能是在运行时输入
+reg set_running_start_cursor;		// 配合下面一个reg使用
+reg [12:0] running_start_cursor;		// 如果在运行程序，而且需要屏幕输入，这时需要记录输入起始光标，防止用户退格到上一行
+
 
 // REGISTERS INITIALIZATION
 initial begin
@@ -230,6 +260,10 @@ initial begin
 	ROLL_CLEAR_ITER = 0;
 	
 	keyboard_valid = 1;
+	output_flag = 0;
+	running_program = 0;
+	set_running_start_cursor = 0;
+	running_start_cursor = 0;
 end
 
 
@@ -254,6 +288,7 @@ always @(posedge clk) begin
 			y_cnt <= y_cnt - 1;
 			roll_cnt <= roll_cnt - 70;
 			roll_cnt_lines <= roll_cnt_lines - 1;
+			running_start_cursor <= running_start_cursor - 70;
 		end
 		
 		if (ROLL_CLEAR_ITER < 57) begin
@@ -273,10 +308,14 @@ always @(posedge clk) begin
 	// 回车的下个周期：开始往外送数据，因为考虑到可能会引起57行之后的清空操作，所以隔一个周期处理
 	if (output_flag) begin
 		output_flag <= 0;
-		out_lineLen <= out_lineLen_help;
+		if (out_lineLen_help > BUFFER_LEN)
+			out_lineLen <= BUFFER_LEN;
+		else
+			out_lineLen <= out_lineLen_help;
 		out_lineLen_help <= 0;
 		out_newASCII_ready <= 1;				// 空行也必须向外传递，否则无法完成处理
 		keyboard_valid <= 0;
+		running_program <= 1;
 	end else
 begin
 	///////////////// keys cashing /////////////////////
@@ -297,12 +336,18 @@ begin
 		cursor <= cursor + BASH_HEAD_LEN;
 		out_solved <= 1;
 		enter[y_cnt] <= 1; 	// 新的命令提示符
+		running_program <= 0;
 	end
 	
 	///////////////// Require new line //////////////////////////
 	if (!in_newASCII_ready && in_require_line) begin
 		keyboard_valid <= 1;
 		out_require_line <= 1;
+		set_running_start_cursor <= 1;
+	end
+	if (set_running_start_cursor) begin		// 下一个周期再去读cursor，这样可以防止各种意外
+		set_running_start_cursor <= 0;
+		running_start_cursor <= cursor;
 	end
 	
 	if (out_require_line)
@@ -368,8 +413,9 @@ begin
 	///////////////// newKey Coding /////////////////////
 	if (sampling_newKey && keyboard_valid) begin
 		// 新键处理开始
+		
 		///////////////// Backspace /////////////////////
-		if (scanCode == 8'h66 && cursor > 0) begin 				// 有格可退
+		if (scanCode == 8'h66 && cursor > BASH_HEAD_LEN) begin// 退格键
 			// keys[cursor - 1] <= 0;
 			// 防止织毛衣，交给下个周期做
 			flag_keys_write <= 1;
@@ -380,20 +426,25 @@ begin
 			if (enter[y_cnt] && x_cnt == BASH_HEAD_LEN) begin	// 命令提示符这行到头了
 				// Do nothing
 				out_lineLen_help <= 0;
-			end else if (x_cnt == 0) begin							// 回到上一行逻辑(这一行无命令提示符)
-				if (y_cnt > 0) begin
-					out_lineLen_help <= out_lineLen_help - 1;
-					x_cnt <= 69;
-					y_cnt <= y_cnt - 1;
-					cursor <= cursor - 1;
-					if (roll_cnt_lines > 0) begin
-						roll_cnt <= roll_cnt - 70;
-						roll_cnt_lines <= roll_cnt_lines - 1;
-					end
-				end else begin
-					out_lineLen_help <= out_lineLen_help - 1;
+			end else if (x_cnt == 0 && (
+					(!running_program) || (cursor > running_start_cursor)
+					)) begin
+				// 回到上一行逻辑(这一行无命令提示符)
+				// 要么是没运行程序，要么是程序需要输入
+				// 如果程序需要输入，不能在需要输入的地方顶头退格！会把上一行退掉的。
+				// 一定有y_cnt > 0，因为第一行是有命令提示符的
+				out_lineLen_help <= out_lineLen_help - 1;
+				x_cnt <= 69;
+				y_cnt <= y_cnt - 1;
+				cursor <= cursor - 1;
+				if (roll_cnt_lines > 0) begin
+					roll_cnt <= roll_cnt - 70;
+					roll_cnt_lines <= roll_cnt_lines - 1;
 				end
-			end else begin													// 普通退格逻辑
+			end else if (
+				((!running_program) && (x_cnt > 0)) ||
+				((running_program) && (cursor > running_start_cursor))
+			) begin								// 普通退格逻辑
 				out_lineLen_help <= out_lineLen_help - 1;
 				x_cnt <= x_cnt - 1;
 				cursor <= cursor - 1;
@@ -417,25 +468,26 @@ begin
 		if (direction_flag) begin							// 方向键
 			case (scanCode_E0)
 				8'h75: begin	// 上
-					
+					vout_color_iterator <= 0;
 				end
 				8'h72: begin	// 下
-					
+					vout_color_iterator <= 2;
 				end
 				8'h6B: begin	// 左
-					
+					vout_color_iterator <= 3;
 				end
 				8'h74: begin	// 右
-					
+					vout_color_iterator <= 1;
 				end
 			endcase
 		end else
 		///////////////// Other ASCII Key /////////////////////
 		if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
-			if (out_lineLen_help < 32) begin						// 维护输出字符串
-				out_lineLen_help <= out_lineLen_help + 1;
+			out_lineLen_help <= out_lineLen_help + 1;
+			if (out_lineLen_help < BUFFER_LEN) begin						// 维护输出字符串
 				buffer[out_lineLen_help] <= ASCII;
 			end
+
 			//keys[cursor] <= ASCII;
 			flag_keys_write <= 1;
 			keys_index_helper <= cursor;
