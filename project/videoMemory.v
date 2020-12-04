@@ -22,6 +22,8 @@ module videoMemory(
 	input		isASCIIkey,	// 扫描码是否是ASCII字符
 	
 	//////////// Interface ///////////
+	input				inWelcome,
+	
 	input				in_solved,						// 结束信号，解决完这条指令后传递1一个周期进这个模块
 	output	reg	out_solved,						// 本模块处理完结束信号会输出1一个周期
 	input				in_require_line,					// 需要输入一行数据
@@ -74,12 +76,12 @@ wire [7:0] offsetX;
 wire [7:0] offsetY;
 wire [11:0] vm_index;
 wire [11:0] line;
-wire [11:0] showcolor;
+wire [23:0] showcolor;
 
 // 命令提示符
 wire [11:0] vm_index_header;
 wire [11:0] line_header;
-wire [11:0] showcolor_header;
+wire [23:0] showcolor_header;
 
 // 控制台配色，一共四种，按上下左右键切换
 reg  [1:0]	vout_color_iterator;
@@ -411,7 +413,7 @@ begin
 
 	
 	///////////////// newKey Coding /////////////////////
-	if (sampling_newKey && keyboard_valid) begin
+	if (sampling_newKey && keyboard_valid && !inWelcome) begin
 		// 新键处理开始
 		
 		///////////////// Backspace /////////////////////

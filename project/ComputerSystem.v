@@ -184,6 +184,8 @@ videoMemory mys_vmemory(
 	.isASCIIkey(isASCIIkey),
 	
 	//////////// Interface ///////////
+	.inWelcome(inWelcome),
+	
 	.in_solved(in_solved),
 	.out_solved(out_solved),
 	.in_require_line(in_require_line),
@@ -209,7 +211,8 @@ welcome welcomer(
 	.rgb_welcome(rgb_welcome),
 	
 	//////////// INTERFACE //////////
-	.inWelcome(inWelcome)
+	.inWelcome(inWelcome),
+	.newKey(newKey)
 );
 
 

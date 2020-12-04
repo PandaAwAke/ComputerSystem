@@ -15,17 +15,17 @@ module videoMemory_assign(
 	input		[11:0]	line,
 	input		[11:0]	line_header,
 	input		[7:0]		scanCode_E0,
-	input		[11:0]	color_background,
-	input		[11:0]	color_text,
+	input		[23:0]	color_background,
+	input		[23:0]	color_text,
 	
 // OUTPUTS
 	output	[12:0]	keys_index,
 	output	[7:0]		offsetX,
 	output	[7:0]		offsetY,
 	output	[11:0]	vm_index,
-	output	[11:0]	showcolor,
+	output	[23:0]	showcolor,
 	output	[11:0]	vm_index_header,
-	output	[11:0]	showcolor_header,
+	output	[23:0]	showcolor_header,
 	output				direction_flag
 );
 

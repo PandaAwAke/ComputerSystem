@@ -8,16 +8,16 @@ module welcome(
 	output	[23:0] rgb_welcome,
 	
 	//////////// INTERFACE //////////
-	output	reg	inWelcome
+	output	reg	inWelcome,
+	input		newKey
 );
 
 
 //=======================================================
 //  Parameter/Wire/Reg coding
 //=======================================================
-parameter StartTime = 19999; 	// 时间到多少开始动画(VGA刚连上会有黑屏)，数值每10000是1秒
-parameter ScrollTime = 59; 	// 时间到多少向下移动1像素，数值每10000是1秒
-parameter StopTime = 39999; 	// 在中间停顿的时间
+parameter StartTime = 39999; 	// 时间到多少开始动画(VGA刚连上会有黑屏)，数值每10000是1秒
+parameter ScrollTime = 59; 	// 多少时间向下移动1像素，数值每10000是1秒
 
 reg  [9:0]	offsetY1;		// 控制从上到中
 reg  [9:0]	offsetY2;		// 控制从中到下
@@ -35,6 +35,8 @@ reg [19:0]	count;
 reg [9:0]	count2;			// 滚屏需要
 wire			welcomeclk;
 reg [2:0]	state;
+reg			KeyPressAccess;// Press any key to continue
+reg			KeyPressed;
 
 initial begin
 	inWelcome = 1;
@@ -44,6 +46,8 @@ initial begin
 	count = 0;
 	count2 = 0;
 	state = 0;
+	KeyPressAccess = 0;
+	KeyPressed = 0;
 end
 
 // 状态0：StartTime
@@ -71,15 +75,12 @@ always @(posedge welcomeclk) begin
 			end else begin
 				count2 <= 0;
 				state <= 2;
+				KeyPressAccess <= 1;
 			end
 		end
 	end else if (state == 2) begin		// 在中间停留
-		if (count < StopTime) begin
-			count <= count + 1;
-		end else begin
-			count <= 0;
+		if (KeyPressed)
 			state <= 3;
-		end
 	end else if (state == 3) begin		// 从中间向下面移动
 		if (count < ScrollTime) begin
 			count <= count + 1;
@@ -96,6 +97,11 @@ always @(posedge welcomeclk) begin
 	end else begin
 		inWelcome <= 0;
 	end
+end
+
+always @(posedge newKey) begin
+	if (KeyPressAccess)
+		KeyPressed <= 1;
 end
 
 
