@@ -7,7 +7,7 @@ module videoMemory(
 	//////////// VGA //////////
 	input		[9:0] h_addr,
 	input		[9:0] v_addr,
-	output	reg	[11:0] rgb,
+	output	reg	[23:0] rgb,
 	
 	//////////// KBHandler //////////
 	input		[7:0] scanCode,
@@ -83,25 +83,25 @@ wire [11:0] showcolor_header;
 
 // 控制台配色，一共四种，按上下左右键切换
 reg  [1:0]	vout_color_iterator;
-reg  [11:0]	vout_color_background[3:0];
-reg  [11:0]	vout_color_text[3:0];
-wire [11:0]	current_vout_color_background = vout_color_background[vout_color_iterator];
-wire [11:0]	current_vout_color_text = vout_color_text[vout_color_iterator];
+reg  [23:0]	vout_color_background[3:0];
+reg  [23:0]	vout_color_text[3:0];
+wire [23:0]	current_vout_color_background = vout_color_background[vout_color_iterator];
+wire [23:0]	current_vout_color_text = vout_color_text[vout_color_iterator];
 
 initial begin
 	vout_color_iterator = 0; // Default
 	// Scheme 1 (Default, Up)
-	vout_color_background[0] = 12'h000;
-	vout_color_text[0] = 12'hFFF;
-	// Scheme 2 (Right)
-	vout_color_background[1] = 12'hDED;
-	vout_color_text[1] = 12'h000;
-	// Scheme 3 (Down)
-	vout_color_background[2] = 12'h8CF;
-	vout_color_text[2] = 12'h000;
-	// Scheme 4 (Left)
-	vout_color_background[3] = 12'h567;
-	vout_color_text[3] = 12'hFCD;
+	vout_color_background[0] = 24'h000000;
+	vout_color_text[0] = 24'hFFFFFF;
+	// Scheme 2 (Right)		(Chocolate)
+	vout_color_background[1] = 24'hC1B6A0;
+	vout_color_text[1] = 24'h382113;
+	// Scheme 3 (Down)		(Blue-White)
+	vout_color_background[2] = 24'h027CBD;
+	vout_color_text[2] = 24'hFFFFFF;
+	// Scheme 4 (Left)		(NJU-Purple)
+	vout_color_background[3] = 24'h63065F;
+	vout_color_text[3] = 24'hF7F4AD;
 end
 
 // 输出总线

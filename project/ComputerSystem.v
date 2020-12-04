@@ -94,7 +94,10 @@ wire	[7:0]	ASCII;
 // 显存控制模块接线
 wire [9:0] h_addr;
 wire [9:0] v_addr;
-wire [11:0] rgb;
+wire [23:0] rgb;					// VideoMemory给出的输出颜色
+wire [23:0] rgb_welcome;		// Welcome给出的输出颜色
+wire [23:0] real_output_rgb;	// 真正的输出颜色
+wire inWelcome;
 
 // 显存接口模块接线
 wire in_solved;
@@ -112,7 +115,7 @@ wire [12:0] out_lineLen;
 wire [7:0] lineOut;
 
 //=======================================================
-//  Structural coding
+//  Modules coding
 //=======================================================
 
 keyboardHandler mys_kbHandler(
@@ -147,7 +150,7 @@ clkgen #(25000000) mys_vgaclk(
 vga_ctrl vga_control(
 	.pclk(VGA_CLK), 
 	.reset(reset),
-	.vga_data(rgb),
+	.vga_data(real_output_rgb),
 	.h_addr(h_addr),
 	.v_addr(v_addr),
 	.hsync(VGA_HS),
@@ -196,6 +199,19 @@ videoMemory mys_vmemory(
 	.lineOut(lineOut)
 );
 
+welcome welcomer(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	
+	//////////// VGA //////////
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.rgb_welcome(rgb_welcome),
+	
+	//////////// INTERFACE //////////
+	.inWelcome(inWelcome)
+);
+
 
 EchoExample mys_echoInteract(
 	//////////// CLK ////////////
@@ -215,5 +231,10 @@ EchoExample mys_echoInteract(
 	.out_lineLen(out_lineLen),
 	.lineOut(lineOut)
 );
+
+//=======================================================
+//  rgb control coding
+//=======================================================
+assign real_output_rgb = (inWelcome ? rgb_welcome : rgb);
 
 endmodule
