@@ -31,19 +31,23 @@
 
 #### 原理
 
-<https://blog.csdn.net/u012837895/article/details/79855896>
+[MIPS汇编快速入门_生息之地-CSDN博客_mips汇编](https://blog.csdn.net/u012837895/article/details/79855896)
 
-<https://blog.csdn.net/qq_41191281/article/details/85933985>
+[MIPS指令集及汇编完全解析_En Takahashi 's blog-CSDN博客_mips指令集](https://blog.csdn.net/qq_41191281/article/details/85933985)
 
 #### 指令集 (31条)
 
-<https://blog.csdn.net/yixilee/article/details/4316617>
+[MIPS 指令集(共31条）_Jouson的专栏-CSDN博客_sll指令](https://blog.csdn.net/goodlinux/article/details/6731484)
+
+[MIPS 指令集(共31条）_晶喜的专栏-CSDN博客_mips指令集](https://blog.csdn.net/yixilee/article/details/4316617)
+
+[MIPS指令集及汇编完全解析_En Takahashi 's blog-CSDN博客_mips指令集](https://blog.csdn.net/qq_41191281/article/details/85933985)
 
 ### CPU参考博客
 
-<https://blog.csdn.net/qq_36312878/article/details/80854435>
+[单周期CPU——verilog语言实现_第五清风的博客-CSDN博客_单周期cpu](https://blog.csdn.net/qq_36312878/article/details/80854435)
 
-<https://blog.csdn.net/accelerato/article/details/86546751>
+[Verilog单周期CPU设计（超详细）_Ace Cheney的博客-CSDN博客_单周期cpu设计](https://blog.csdn.net/accelerato/article/details/86546751)
 
 ## 项目结构
 
