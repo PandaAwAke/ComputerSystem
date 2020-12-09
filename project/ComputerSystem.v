@@ -76,12 +76,168 @@ module ComputerSystem(
 //  REG/WIRE declarations
 //=======================================================
 
+wire reset = 0;
+wire clrn = ~reset;
 
+// 键盘接线
+wire	[7:0] scanCode;
+wire	[7:0] scanCode_E0;
+wire	shift;
+wire	ctrl;
+wire	alt;
+wire	capslock;
+wire	insert;
+wire	newKey;
+wire	isASCIIkey;
+wire	[7:0]	ASCII;
 
+// 显存控制模块接线
+wire [9:0] h_addr;
+wire [9:0] v_addr;
+wire [23:0] rgb;					// VideoMemory给出的输出颜色
+wire [23:0] rgb_welcome;		// Welcome给出的输出颜色
+wire [23:0] real_output_rgb;	// 真正的输出颜色
+wire inWelcome;
+
+// 显存接口模块接线
+wire in_solved;
+wire out_solved;
+wire in_require_line;
+wire out_require_line;
+
+wire lineIn_nextASCII;
+wire in_newASCII_ready;
+wire [7:0] lineIn;
+
+wire lineOut_nextASCII;
+wire out_newASCII_ready;
+wire [12:0] out_lineLen;
+wire [7:0] lineOut;
 
 //=======================================================
-//  Structural coding
+//  Modules coding
 //=======================================================
 
+keyboardHandler mys_kbHandler(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	.clrn(clrn),
+	//////////// PS2 //////////
+	.PS2_CLK(PS2_CLK),
+	.PS2_DAT(PS2_DAT),
+	//////////// output //////////
+	.scanCode(scanCode),
+	.scanCode_E0(scanCode_E0),
+	.shift(shift),
+	.ctrl(ctrl),
+	.alt(alt),
+	.capslock(capslock),
+	.insert(insert),
+	.newKey(newKey),
+	.isASCIIkey(isASCIIkey),
+	.ASCII(ASCII)
+);
+
+
+clkgen #(25000000) mys_vgaclk(
+	.clkin(CLOCK_50), 
+	.rst(reset), 
+	.clken(1'b1), 
+	.clkout(VGA_CLK)
+);
+
+
+vga_ctrl vga_control(
+	.pclk(VGA_CLK), 
+	.reset(reset),
+	.vga_data(real_output_rgb),
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.hsync(VGA_HS),
+	.vsync(VGA_VS),
+	.valid(VGA_BLANK_N),
+	.vga_r(VGA_R),
+	.vga_g(VGA_G),
+	.vga_b(VGA_B)
+);
+
+
+videoMemory mys_vmemory(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	
+	//////////// VGA //////////
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.rgb(rgb),
+	
+	//////////// KBHandler //////////
+	.scanCode(scanCode),
+	.scanCode_E0(scanCode_E0),
+	.shift(shift),
+	.ctrl(ctrl),
+	.alt(alt),
+	.capslock(capslock),
+	.insert(insert),
+	.newKey(newKey),
+	.ASCII(ASCII),
+	.isASCIIkey(isASCIIkey),
+	
+	//////////// Interface ///////////
+	.inWelcome(inWelcome),
+	
+	.in_solved(in_solved),
+	.out_solved(out_solved),
+	.in_require_line(in_require_line),
+	.out_require_line(out_require_line),
+	
+	.lineIn_nextASCII(lineIn_nextASCII),
+	.in_newASCII_ready(in_newASCII_ready),
+	.lineIn(lineIn),
+	
+	.lineOut_nextASCII(lineOut_nextASCII),
+	.out_newASCII_ready(out_newASCII_ready),	
+	.out_lineLen(out_lineLen),
+	.lineOut(lineOut)
+);
+
+welcome welcomer(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	
+	//////////// VGA //////////
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.rgb_welcome(rgb_welcome),
+	
+	//////////// INTERFACE //////////
+	.inWelcome(inWelcome),
+	.newKey(newKey)
+);
+
+
+EchoExample mys_echoInteract(
+	//////////// CLK ////////////
+	.clk(CLOCK_50),
+	//////////// Video Memory : Solved Signal ///////////
+	.in_solved(in_solved),
+	.out_solved(out_solved),
+	.in_require_line(in_require_line),
+	.out_require_line(out_require_line),
+
+	.lineIn_nextASCII(lineIn_nextASCII),				
+	.in_newASCII_ready(in_newASCII_ready),
+	.lineIn(lineIn),
+	
+	.lineOut_nextASCII(lineOut_nextASCII),
+	.out_newASCII_ready(out_newASCII_ready),
+	.out_lineLen(out_lineLen),
+	.lineOut(lineOut)
+);
+
+//=======================================================
+//  rgb control coding
+//=======================================================
+assign real_output_rgb = (inWelcome ? rgb_welcome : rgb);
 
 endmodule
