@@ -397,4 +397,5 @@ set_global_assignment -name VERILOG_FILE vga_memory_storage.v
 set_global_assignment -name VERILOG_FILE videoMemory_assigns.v
 set_global_assignment -name VERILOG_FILE welcome.v
 set_global_assignment -name QIP_FILE welcomeStorage.qip
+set_global_assignment -name FLOW_ENABLE_RTL_VIEWER ON
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
