@@ -19,19 +19,19 @@ module CPU(
     output audio_ena,
     output [5:0] State,
 
-	output  reg  solved,
-	input        video_solved,
-	output  reg  require_input,
-	input        input_valid,
+    output  reg  solved,
+    input        video_solved,
+    output  reg  require_input,
+    input        input_valid,
 
-	input        out_ready,
-	output  reg  out_end_n,
-	output reg [7:0] ascii_out,
-	
-	output  reg  in_ready,
-	input        in_end_n,
-	input [12:0] lineLen,
-	input  [7:0] ascii_in
+    input        out_ready,
+    output  reg  out_end_n,
+    output reg [7:0] ascii_out,
+    
+    output  reg  in_ready,
+    input        in_end_n,
+    input [12:0] lineLen,
+    input  [7:0] ascii_in
 );
 
 (* ram_init_file = "init_files/main_memory" *) reg [31:0] main_memory [16*1024-1:0];
@@ -77,7 +77,7 @@ wire [5:0] func = instr[5:0];
 wire [15:0] imm = instr[15:0];
 wire [25:0] addr = instr[25:0];
 
-reg [5:0] state = 6'd0;
+reg [5:0] state = 6'd5;
 reg [31:0] output_remain;
 
 assign State = state;
@@ -114,6 +114,8 @@ ALU alu(
 reg div_start = 1'b0;
 wire [31:0] q, r;
 
+wire div_end;
+
 DIV div(
     .clk(clk),
     .dividend(ALUin1),
@@ -130,9 +132,10 @@ initial begin
     register[26] = 32'h7fff0000; //input start addr
     register[27] = 32'h1; //control register
     solved = 1'b0;
-	out_end_n = 1'b0;
-	ascii_out = 8'h0;
-	require_input = 1'b0;
+    out_end_n = 1'b0;
+    ascii_out = 8'h0;
+    require_input = 1'b0;
+    in_ready = 1'b0;
 end
 
 reg [2:0] key_sync;
@@ -140,10 +143,11 @@ reg [2:0] key_sync;
 always @ (posedge clk) begin
     key_sync <= {key_sync[1:0], key_clk};
 end
-	
+    
 wire key_samp = key_sync[2] & ~key_sync[1];
 
-always @ (posedge clk or negedge clrn) begin
+always @ (posedge clk) begin
+    /*
     if (clrn == 1'b0) begin
         PC <= 32'h400000;
         state <= 6'd5;
@@ -153,6 +157,7 @@ always @ (posedge clk or negedge clrn) begin
         register[27] <= 32'h1;
     end
     else begin
+    */
         case (state)
             6'd0: begin // instr_fetch
                 //if (jmp_ena) begin
@@ -164,13 +169,15 @@ always @ (posedge clk or negedge clrn) begin
                     PC <= PC + 32'd4;
                     instr <= instr_ram[PC[11:2]];
                 //end
-                if (register[27][3]/*PC[11:2] == PC_end[11:2]*/) begin //end
+                if (register[27][3]/*PC[11:2] == PC_end[11:2]*/ or clrn == 1'b0) begin //end
                     //out <= register[2];
                     solved <= 1'b1;
+                    /*
                     PC <= 32'h400000;
                     register[29] <= 32'h7fffeffc;
                     register[27] <= {27'h0, register[27][4], 4'h1};
                     register[26] <= 32'h7fff0000;
+                    */
                     state <= 6'd12;
                 end
                 else if (register[27][1]) begin //require output
@@ -492,6 +499,13 @@ always @ (posedge clk or negedge clrn) begin
             end
             6'd12: begin //end of program
                 if (video_solved) begin
+                    PC <= 32'h400000;
+                    register[29] <= 32'h7fffeffc;
+                    register[27] <= {27'h0, register[27][4], 4'h1};
+                    register[26] <= 32'h7fff0000;
+                    out_end_n = 1'b0;
+                    require_input = 1'b0;
+                    in_ready = 1'b0;
                     solved <= 1'b0;
                     state <= 6'd5;
                 end
@@ -646,6 +660,10 @@ always @ (posedge clk or negedge clrn) begin
             6'd35: begin
                 if (key_samp)
                     state <= 6'd0;
+                else if (clrn) begin
+                    solved <= 1'b1;
+                    state <= 6'd12;
+                end
             end
             6'd36: begin //wait for video respond
                 if (input_valid) begin
@@ -655,7 +673,7 @@ always @ (posedge clk or negedge clrn) begin
                 end
             end
         endcase
-    end
+    //end
 end
 
 endmodule
