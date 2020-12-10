@@ -43,11 +43,11 @@ module videoMemory(
 
 initial begin
 	// output
-	out_solved = 0;
-	out_newASCII_ready = 0;
-	out_lineLen = 0;
-	lineIn_nextASCII = 0;
-	rgb = 0;
+	out_solved = 1'b0;
+	out_newASCII_ready = 1'b0;
+	out_lineLen = 13'b0;
+	lineIn_nextASCII = 1'b0;
+	rgb = 24'b0;
 end
 
 //=======================================================
