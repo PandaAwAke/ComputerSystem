@@ -17,6 +17,7 @@ module CPU(
     output [31:0] sp,
 
     output audio_ena,
+    output [5:0] State,
 
 	output  reg  solved,
 	input        video_solved,
@@ -35,7 +36,7 @@ module CPU(
 
 (* ram_init_file = "init_files/main_memory" *) reg [31:0] main_memory [16*1024-1:0];
 (* ram_init_file = "init_files/instr_ram" *) reg [31:0] instr_ram [1023:0];
-reg [31:0] PC = 32'h400000, PC_end = 32'h400098, hi, lo;
+reg [31:0] PC = 32'h400000, hi, lo;
 wire [31:0] div_hi, div_lo, mul_hi;
 reg [31:0] register[31:0];
 reg [31:0] instr;
@@ -78,6 +79,8 @@ wire [25:0] addr = instr[25:0];
 
 reg [5:0] state = 6'd0;
 reg [31:0] output_remain;
+
+assign State = state;
 
 wire [31:0] ALUout;
 reg [31:0] ALUin1, ALUin2;
@@ -125,7 +128,7 @@ initial begin
     register[0] = 32'd0; //zero
     register[29] = 32'h7fffeffc; //sp
     register[26] = 32'h7fff0000; //input start addr
-    register[27] = 32'h0; //control register
+    register[27] = 32'h1; //control register
     solved = 1'b0;
 	out_end_n = 1'b0;
 	ascii_out = 8'h0;
@@ -147,7 +150,7 @@ always @ (posedge clk or negedge clrn) begin
         //jmp_ena <= 1'b0;
         register[29] <= 32'h7fffeffc;
         register[26] <= 32'h7fff0000;
-        register[27] <= 32'h0;
+        register[27] <= 32'h1;
     end
     else begin
         case (state)
@@ -166,7 +169,7 @@ always @ (posedge clk or negedge clrn) begin
                     solved <= 1'b1;
                     PC <= 32'h400000;
                     register[29] <= 32'h7fffeffc;
-                    register[27] <= {27'h0, register[27][4], 4'h0};
+                    register[27] <= {27'h0, register[27][4], 4'h1};
                     register[26] <= 32'h7fff0000;
                     state <= 6'd12;
                 end

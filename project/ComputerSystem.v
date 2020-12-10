@@ -76,7 +76,7 @@ module ComputerSystem(
 //  REG/WIRE declarations
 //=======================================================
 
-wire reset = 0;
+wire reset = 1'b0;
 wire clrn = ~reset;
 
 // 键盘接线
@@ -240,6 +240,7 @@ CPU cpu(
    .sp(sp),
 	
 	.audio_ena(audio_ena),
+	.State(LEDR[5:0]),
 	
 	.solved(in_solved),
 	.video_solved(out_solved),
