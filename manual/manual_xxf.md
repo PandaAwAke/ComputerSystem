@@ -26,6 +26,10 @@ control register的说明
 
 内存最多放16K个32bit，这就是说内存地址的低2位应始终为0，只能放32位的数
 
+内存和指令都可以扩充，目前使用量约为
+
+![image-20201211124535950](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211124535950.png)
+
 做了一个简单的地址映射，数据段物理地址为虚拟地址的低16位，代码段物理地址为虚拟地址的低12位
 
 数据和代码放在两个不同的区域，不能相互访问

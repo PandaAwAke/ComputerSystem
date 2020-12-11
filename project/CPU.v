@@ -77,7 +77,7 @@ wire [5:0] func = instr[5:0];
 wire [15:0] imm = instr[15:0];
 wire [25:0] addr = instr[25:0];
 
-reg [5:0] state = 6'd5;
+reg [5:0] state = 6'd0;
 reg [31:0] output_remain;
 
 assign State = state;
@@ -159,7 +159,30 @@ always @ (posedge clk) begin
     else begin
     */
         case (state)
-            6'd0: begin // instr_fetch
+            6'd0: begin //wait for enter
+                if (in_end_n) begin
+                    in_ready <= 1'b1;
+                    state <= 6'd1;
+                    //index <= 32'h7FFF0000;
+                    ALUop <= 4'd0;
+                    ALUin1 <= register[26];
+                    ALUin2 <= 32'h0;
+                end
+            end
+            6'd1: begin
+                //main_memory[index[15:2]] <= {24'h0, ascii_in};
+                //index <= index + 32'd4;
+                main_memory[ALUout[15:2]] <= {24'h0, ascii_in};
+                ALUop <= 4'd0;
+                ALUin1 <= ALUout;
+                ALUin2 <= 32'h4;
+
+                if (ascii_in == 8'h0) begin
+                    in_ready <= 1'b0;
+                    state <= 6'd2;
+                end
+            end
+            6'd2: begin // instr_fetch
                 //if (jmp_ena) begin
                 //    PC <= jmp_dest + 32'd4;
                 //    instr <= instr_ram[jmp_dest[11:2]];
@@ -190,9 +213,9 @@ always @ (posedge clk) begin
                     state <= 6'd36;
                 end            
                 else
-                    state <= 6'd1;
+                    state <= 6'd3;
             end
-            6'd1: begin //decode
+            6'd3: begin //decode
                 case (op)            
                     6'h0: case (func)
                         6'b100000, 6'b100001: begin
@@ -345,17 +368,24 @@ always @ (posedge clk) begin
                     
                     default: */
                 endcase
-                state <= 6'd2;
+                state <= 6'd4;
             end
-            6'd2: begin //exec
+            6'd4: begin //exec
                 if (div_start) begin
                     div_start <= 1'b0;
-                    state <= 6'd4;
+                    state <= 6'd5;
                 end
                 else
-                    state <= 6'd3;
+                    state <= 6'd6;
             end
-            6'd3: begin //write back
+            6'd5: begin //wait for div end
+                if (div_end) begin
+                    state <= 6'd6;
+                    lo <= div_lo;
+                    hi <= div_hi;
+                end
+            end  
+            6'd6: begin //write back
                 case (op)            
                     6'h0: case (func)
                         6'b100000, 6'b100011: begin
@@ -418,40 +448,10 @@ always @ (posedge clk) begin
                     end                    
                 endcase
                 if (register[27][0] == 1'b0)
-                    state <= 6'd0;
+                    state <= 6'd2;
                 else
                     state <= 6'd13;
-            end
-            6'd4: begin //wait for div end
-                if (div_end) begin
-                    state <= 6'd3;
-                    lo <= div_lo;
-                    hi <= div_hi;
-                end
-            end
-            6'd5: begin //wait for enter
-                if (in_end_n) begin
-                    in_ready <= 1'b1;
-                    state <= 6'd6;
-                    //index <= 32'h7FFF0000;
-                    ALUop <= 4'd0;
-                    ALUin1 <= register[26];
-                    ALUin2 <= 32'h0;
-                end
-            end
-            6'd6: begin
-                //main_memory[index[15:2]] <= {24'h0, ascii_in};
-                //index <= index + 32'd4;
-                main_memory[ALUout[15:2]] <= {24'h0, ascii_in};
-                ALUop <= 4'd0;
-                ALUin1 <= ALUout;
-                ALUin2 <= 32'h4;
-
-                if (ascii_in == 8'h0) begin
-                    in_ready <= 1'b0;
-                    state <= 6'd0;
-                end
-            end
+            end         
             6'd7: begin //output
                 //index <= register[29];
                 ALUop <= 4'd0;
@@ -481,9 +481,9 @@ always @ (posedge clk) begin
                 ALUop <= 4'd0;
                 ALUin1 <= ALUout; 
                 if (out_ready) begin
-                    if (output_remain == 32'h0) begin
+                    if (output_remain == 32'd0) begin
                         out_end_n <= 1'b0;
-                        state <= 6'd0;
+                        state <= 6'd2;
                         //ALUin2 <= 32'h0;
                     end
                     else begin
@@ -491,6 +491,7 @@ always @ (posedge clk) begin
                         ascii_out <= main_memory[ALUout[15:2]][7:0];
                         //index <= index + 32'd4;
                         //ALUin2 <= 32'h4;
+                        output_remain <= output_remain - 32'd1;
                     end
                     ALUin2 <= 32'h4;
                 end
@@ -503,11 +504,11 @@ always @ (posedge clk) begin
                     register[29] <= 32'h7fffeffc;
                     register[27] <= {27'h0, register[27][4], 4'h1};
                     register[26] <= 32'h7fff0000;
-                    out_end_n = 1'b0;
-                    require_input = 1'b0;
-                    in_ready = 1'b0;
+                    out_end_n <= 1'b0;
+                    require_input <= 1'b0;
+                    in_ready <= 1'b0;
                     solved <= 1'b0;
-                    state <= 6'd5;
+                    state <= 6'd0;
                 end
             end            
             6'd13: begin //0, single run print
@@ -659,7 +660,7 @@ always @ (posedge clk) begin
             end
             6'd35: begin
                 if (key_samp)
-                    state <= 6'd0;
+                    state <= 6'd2;
                 else if (clrn) begin
                     solved <= 1'b1;
                     state <= 6'd12;
@@ -669,7 +670,7 @@ always @ (posedge clk) begin
                 if (input_valid) begin
                     //in_ready <= 1'b1;
                     require_input <= 1'b0;
-                    state <= 6'd5;
+                    state <= 6'd0;
                 end
             end
         endcase
