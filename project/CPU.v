@@ -192,7 +192,7 @@ always @ (posedge clk) begin
                     PC <= PC + 32'd4;
                     instr <= instr_ram[PC[11:2]];
                 //end
-                if (register[27][3]/*PC[11:2] == PC_end[11:2]*/ || clrn == 1'b0) begin //end
+                if (register[27][3] == 1'b1 || clrn == 1'b0) begin //end
                     //out <= register[2];
                     solved <= 1'b1;
                     /*
@@ -203,11 +203,11 @@ always @ (posedge clk) begin
                     */
                     state <= 6'd12;
                 end
-                else if (register[27][1]) begin //require output
+                else if (register[27][1] == 1'b1) begin //require output
                     register[27] <= {register[27][31:2], 1'b0, register[27][0]};
                     state <= 6'd7;
                 end
-                else if (register[27][2]) begin //require input
+                else if (register[27][2] == 1'b1) begin //require input
                     register[27] <= {register[27][31:3], 1'b0, register[27][1:0]};
                     require_input <= 1'b1;
                     state <= 6'd36;
@@ -656,7 +656,7 @@ always @ (posedge clk) begin
             6'd35: begin
                 if (key_samp)
                     state <= 6'd2;
-                else if (clrn) begin
+                else if (clrn == 1'b0) begin
                     solved <= 1'b1;
                     state <= 6'd12;
                 end
