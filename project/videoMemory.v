@@ -250,22 +250,22 @@ reg [12:0] running_start_cursor;		// 如果在运行程序，而且需要屏幕�
 
 // REGISTERS INITIALIZATION
 initial begin
-	roll_cnt_lines = 0;
-	roll_cnt = 0;
+	roll_cnt_lines = 8'd0;
+	roll_cnt = 13'd0;
 	cursor = BASH_HEAD_LEN;
 	x_cnt = BASH_HEAD_LEN;
-	y_cnt = 0;
-	enter = 1;
-	out_lineLen_help = 0;
+	y_cnt = 8'd0;
+	enter = 60'd1;
+	out_lineLen_help = 13'd0;
 	
-	ROLL_CLEAR_FIRST_LINE = 0;
-	ROLL_CLEAR_ITER = 0;
+	ROLL_CLEAR_FIRST_LINE = 1'd0;
+	ROLL_CLEAR_ITER = 13'd0;
 	
-	keyboard_valid = 1;
-	output_flag = 0;
-	running_program = 0;
-	set_running_start_cursor = 0;
-	running_start_cursor = 0;
+	keyboard_valid = 1'd1;
+	output_flag = 1'd0;
+	running_program = 1'd0;
+	set_running_start_cursor = 1'd0;
+	running_start_cursor = 13'd0;
 end
 
 

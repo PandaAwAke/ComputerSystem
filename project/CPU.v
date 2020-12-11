@@ -291,17 +291,12 @@ always @ (posedge clk) begin
                         //6'b001000: begin
                             
                         //end
-                        6'b011000: begin //mult
+                        6'b011000, 6'b011001: begin //mult, multu
                             ALUop <= 4'd14;
                             ALUin1 <= register[rs];
                             ALUin2 <= register[rt];
                         end
-                        6'b011001: begin //multu
-                            ALUop <= 4'd14;
-                            ALUin1 <= register[rs];
-                            ALUin2 <= register[rt];
-                        end
-                        6'h1b: begin //divu
+                        6'h1a, 6'h1b: begin //divu
                             ALUin1 <= register[rs];
                             ALUin2 <= register[rt];
                             div_start <= 1'b1;

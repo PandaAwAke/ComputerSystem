@@ -8,7 +8,7 @@
 |  26  |  k0   | 初始为0x7fff0000，指示输入内容放置的起始地址 |
 |  27  |  k1   |          control register，初始为0           |
 |  29  |  sp   |           栈指针，初始为0x7fffeffc           |
-|  31  |  ra   |                   返回地址                   |
+|  31  |  ra   |             返回地址，jal指令用              |
 |      | lo,hi |                 乘除法的结果                 |
 |      |  pc   |          指令计数器，初始为0x400000          |
 
@@ -26,6 +26,8 @@ control register的说明
 
 内存最多放16K个32bit，这就是说内存地址的低2位应始终为0，只能放32位的数
 
+![image-20201211144912098](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211144912098.png)
+
 内存和指令都可以扩充，目前使用量约为
 
 ![image-20201211124535950](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211124535950.png)
@@ -40,10 +42,25 @@ control register的说明
 
 读入都只能读一行，以0结尾。
 
-程序需要输出时需依次把需要输出的字符放在sp开始的内存中，每32bit放一个字符，0表示**换行**（也就是说依次从最后一位（结束符0）到第一位压栈）。最后把字符串长度（包含末尾的0，即最少为1）压在(sp)处。一次最多能输出多少个字符要问mss
+程序需要输出时需依次把需要输出的字符放在sp开始的内存中，每32bit放一个字符，0表示**换行**（也就是说依次从最后一位（结束符0）到第一位压栈）。最后把字符串长度（包含末尾的0，即最少为1）压在(sp)处。
 
-zss的任务：生成`instr_ram.mif`，0x400000处的指令放在0处，以此类推
+一次最多能输入输出多少个字符要问mss
+
+zss的任务：生成`instr_ram.mif`，0x400000处的指令放在0处，以此类推。在tool中有一个简单的`bin2mif.py`示例，assembly中有范例汇编文件（只有`mips3.asm`是可以放在我们的机器上的，其他的是编写的参考）
 
 若有必要，生成`main_memory.mif`，但只有第一次有效，再次从头运行程序的时候没用
 
 空指令nop为全0
+
+![image-20201211152614555](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211152614555.png)
+
+![image-20201211152629727](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211152629727.png)
+
+我的一点设想
+
+- shell就是shell，不存在什么文本模式，一开始程序读到的一定是命令，不然就输出invalid command等。但是应该可以比如输入vim，就进入不断请求输入的循环，直到输入q，之类的
+- 没有adc，sbb指令
+- 有符号指令和无符号指令之间的唯一区别是有符号指令可以产生溢出异常，不溢出才装入，而无符号指令则不会，会装入溢出结果。但addi和addiu资料间有歧义，我实现的addiu做的是零扩展
+
+- div，divu和mul，mulu两组实现上没有区别，建议用u
+- 有imm的，addi，lw，sw，beq，bne，slt做了符号扩展，逻辑指令和sltiu做了零扩展
