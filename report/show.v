@@ -19,15 +19,15 @@ module videoMemory(
 	input		insert,
 	input		newKey,
 	input		[7:0]	ASCII,		// 实际显示的ASCII值
-	input		isASCIIkey,			// 扫描码是否是ASCII字符
+	input		isASCIIkey,	// 扫描码是否是ASCII字符
 	
 	//////////// Interface ///////////
 	input				inWelcome,
 	
-	input				in_solved,						// 结束信号，解决完这条指令后传递1一个周期进这个模块
-	output	reg	out_solved,						// 本模块处理完结束信号会输出1一个周期
-	input				in_require_line,				// 需要输入一行数据
-	output	reg	out_require_line,				// 知道了，然后我开始输入（配合滚屏）
+	input				in_solved,	// 结束信号，解决完这条指令后传递1一个周期进这个模块
+	output	reg	out_solved,	// 本模块处理完结束信号会输出1一个周期
+	input				in_require_line,	// 需要输入一行数据
+	output	reg	out_require_line,	// 知道了，然后我开始输入（配合滚屏）
 	
 	// 外界模块输入bash输出信息，外部模块应该注意最后一位是00
 	output	reg	lineIn_nextASCII,
@@ -82,6 +82,29 @@ wire [23:0] showcolor;
 wire [11:0] vm_index_header;
 wire [11:0] line_header;
 wire [23:0] showcolor_header;
+
+// 控制台配色，一共四种，按上下左右键切换
+reg  [1:0]	vout_color_iterator;
+reg  [23:0]	vout_color_background[3:0];
+reg  [23:0]	vout_color_text[3:0];
+wire [23:0]	current_vout_color_background = vout_color_background[vout_color_iterator];
+wire [23:0]	current_vout_color_text = vout_color_text[vout_color_iterator];
+
+initial begin
+	vout_color_iterator = 0; // Default
+	// Scheme 1 (Default, Up)
+	vout_color_background[0] = 24'h000000;
+	vout_color_text[0] = 24'hFFFFFF;
+	// Scheme 2 (Right)		(Chocolate)
+	vout_color_background[1] = 24'hC1B6A0;
+	vout_color_text[1] = 24'h382113;
+	// Scheme 3 (Down)		(Blue-White)
+	vout_color_background[2] = 24'h027CBD;
+	vout_color_text[2] = 24'hFFFFFF;
+	// Scheme 4 (Left)		(NJU-Purple)
+	vout_color_background[3] = 24'h63065F;
+	vout_color_text[3] = 24'hF7F4AD;
+end
 
 // 输出总线
 assign lineOut = (
@@ -201,6 +224,7 @@ reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 // 滚屏记录
 reg [7:0]  roll_cnt_lines;			// 滚屏滚掉多少行
 reg [12:0] roll_cnt;					// 滚屏滚掉的下标
+reg [12:0] roll_cnt_max;			// 滚屏滚掉的下标上限
 
 // 方向键标志
 wire direction_flag;
@@ -221,7 +245,7 @@ reg [12:0] ROLL_CLEAR_ITER;			// 滚屏清除第一行用的循环变量
 reg keyboard_valid;						// 是否接受键盘消息，外界模块在处理一条指令时这个应该是0
 reg output_flag;							// 这个时钟周期应该开始输出数据，是为了和57行清屏配合的
 reg running_program;						// 是否正在运行程序，如果正在运行程序退格时可能是在运行时输入
-reg set_running_start_cursor;			// 配合下面一个reg使用
+reg set_running_start_cursor;		// 配合下面一个reg使用
 reg [12:0] running_start_cursor;		// 如果在运行程序，而且需要屏幕输入，这时需要记录输入起始光标，防止用户退格到上一行
 
 
@@ -229,6 +253,7 @@ reg [12:0] running_start_cursor;		// 如果在运行程序，而且需要屏幕�
 initial begin
 	roll_cnt_lines = 0;
 	roll_cnt = 0;
+	roll_cnt_max = 0;
 	cursor = BASH_HEAD_LEN;
 	x_cnt = BASH_HEAD_LEN;
 	y_cnt = 0;
@@ -267,6 +292,7 @@ always @(posedge clk) begin
 			y_cnt <= y_cnt - 1;
 			roll_cnt <= roll_cnt - 70;
 			roll_cnt_lines <= roll_cnt_lines - 1;
+			roll_cnt_max <= roll_cnt_max - 70;
 			running_start_cursor <= running_start_cursor - 70;
 		end
 		
@@ -295,10 +321,12 @@ always @(posedge clk) begin
 		out_newASCII_ready <= 1;				// 空行也必须向外传递，否则无法完成处理
 		keyboard_valid <= 0;
 		running_program <= 1;
-	end else
+	end
+
+	else
 begin
 	///////////////// keys cashing /////////////////////
-	if (flag_keys_write) begin		// 缓存机制：keys在下一个周期进行存储
+	if (flag_keys_write) begin					// 缓存机制：keys在下一个周期进行存储
 		keys[keys_index_helper] <= keys_ASCII_help;
 		keys_index_helper <= 0;
 		flag_keys_write <= 0;
@@ -324,7 +352,7 @@ begin
 		out_require_line <= 1;
 		set_running_start_cursor <= 1;
 	end
-	if (set_running_start_cursor) begin		// 下一个周期再去读cursor，这样可以防止各种意外
+	if (set_running_start_cursor) begin	// 下一个周期再去读cursor，这样可以防止各种意外
 		set_running_start_cursor <= 0;
 		running_start_cursor <= cursor;
 	end
@@ -361,6 +389,7 @@ begin
 					if (y_cnt >= 27) begin										// 27行后自动滚屏
 						roll_cnt <= roll_cnt + 70;
 						roll_cnt_lines <= roll_cnt_lines + 1;
+						roll_cnt_max <= roll_cnt_max + 70;
 					end
 					
 				end else begin
@@ -380,6 +409,7 @@ begin
 						if (y_cnt >= 27) begin									// 27行后自动滚屏
 							roll_cnt <= roll_cnt + 70;
 							roll_cnt_lines <= roll_cnt_lines + 1;
+							roll_cnt_max <= roll_cnt_max + 70;
 						end
 					end else begin
 						x_cnt <= x_cnt + 1;
@@ -394,18 +424,44 @@ begin
 		// 新键处理开始
 		
 		///////////////// Backspace /////////////////////
-		if (scanCode == 8'h66 && cursor > BASH_HEAD_LEN) begin // 退格键
-		
+		if (scanCode == 8'h66 && cursor > BASH_HEAD_LEN) begin// 退格键
 			// keys[cursor - 1] <= 0;
+			// 防止织毛衣，交给下个周期做
 			flag_keys_write <= 1;
 			keys_index_helper <= cursor - 1;
 			keys_ASCII_help <= 0;
 			
 			// 处理x_cnt和y_cnt
-			x_cnt <= x_cnt - 1;
-			cursor <= cursor - 1;
-			
-		end else
+			if (enter[y_cnt] && x_cnt == BASH_HEAD_LEN) begin	// 命令提示符这行到头了
+				// Do nothing
+				out_lineLen_help <= 0;
+			end else if (x_cnt == 0 && (
+					(!running_program) || (cursor > running_start_cursor)
+					)) begin
+				// 回到上一行逻辑(这一行无命令提示符)
+				// 要么是没运行程序，要么是程序需要输入
+				// 如果程序需要输入，不能在需要输入的地方顶头退格！会把上一行退掉的。
+				// 一定有y_cnt > 0，因为第一行是有命令提示符的
+				out_lineLen_help <= out_lineLen_help - 1;
+				x_cnt <= 69;
+				y_cnt <= y_cnt - 1;
+				cursor <= cursor - 1;
+				if (roll_cnt_lines > 0) begin
+					roll_cnt <= roll_cnt - 70;
+					roll_cnt_lines <= roll_cnt_lines - 1;
+					roll_cnt_max <= roll_cnt_max - 70;
+				end
+			end else if (
+				((!running_program) && (x_cnt > 0)) ||
+				((running_program) && (cursor > running_start_cursor))
+			) begin								// 普通退格逻辑
+				out_lineLen_help <= out_lineLen_help - 1;
+				x_cnt <= x_cnt - 1;
+				cursor <= cursor - 1;
+			end
+		end
+	
+	else
 		///////////////// Enter /////////////////////
 		if (scanCode == 8'h5A || scanCode_E0 == 8'h5A) begin	// 回车键
 			output_flag <= 1;
@@ -418,29 +474,40 @@ begin
 			if (y_cnt >= 27) begin										// 27行后自动滚屏
 				roll_cnt <= roll_cnt + 70;
 				roll_cnt_lines <= roll_cnt_lines + 1;
+				roll_cnt_max <= roll_cnt_max + 70;
 			end
 		end else
 		///////////////// Direction Key /////////////////////
 		if (direction_flag) begin							// 方向键
 			case (scanCode_E0)
 				8'h75: begin	// 上
-					vout_color_iterator <= 0;
+					if (roll_cnt_lines > 0) begin
+						roll_cnt_lines <= roll_cnt_lines - 1;
+						roll_cnt <= roll_cnt - 70;
+					end
 				end
 				8'h72: begin	// 下
-					vout_color_iterator <= 2;
+					if (roll_cnt_lines < roll_cnt_max) begin
+						roll_cnt_lines <= roll_cnt_lines + 1;
+						roll_cnt <= roll_cnt + 70;
+					end
 				end
 				8'h6B: begin	// 左
-					vout_color_iterator <= 3;
+					vout_color_iterator <= vout_color_iterator - 1;
 				end
 				8'h74: begin	// 右
-					vout_color_iterator <= 1;
+					vout_color_iterator <= vout_color_iterator + 1;
 				end
 			endcase
 		end else
 		///////////////// Other ASCII Key /////////////////////
-		if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
-		
-			//keys[cursor] <= ASCII; 缓冲输入
+		if (isASCIIkey) begin	// 其他正常字符键
+			out_lineLen_help <= out_lineLen_help + 1;
+			if (out_lineLen_help < BUFFER_LEN) begin	// 维护输出字符串
+				buffer[out_lineLen_help] <= ASCII;
+			end
+
+			//keys[cursor] <= ASCII;
 			flag_keys_write <= 1;
 			keys_index_helper <= cursor;
 			keys_ASCII_help <= ASCII;
@@ -450,6 +517,12 @@ begin
 			if (x_cnt == 69) begin
 				y_cnt <= y_cnt + 1;
 				x_cnt <= 0;
+				ROLL_CLEAR_FIRST_LINE <= (y_cnt >= 56);
+				if (y_cnt >= 27) begin									// 27行后自动滚屏
+					roll_cnt <= roll_cnt + 70;
+					roll_cnt_lines <= roll_cnt_lines + 1;
+					roll_cnt_max <= roll_cnt_max + 70;
+				end
 			end else begin
 				x_cnt <= x_cnt + 1;
 			end

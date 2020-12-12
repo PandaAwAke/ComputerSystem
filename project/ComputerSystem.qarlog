@@ -1,26 +1,20 @@
-Quartus Prime Archive log --	D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/ComputerSystem.qarlog
+Quartus Prime Archive log --	E:/DigitalExp/computersystem/project/ComputerSystem.qarlog
 
-Archive:	D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/ComputerSystem.qar
-Date:		Sat Dec 12 23:11:52 2020
-Quartus Prime		17.1.0 Build 590 10/25/2017 SJ Lite Edition
+Archive:	E:/DigitalExp/computersystem/project/ComputerSystem.qar
+Date:		Sat Dec 12 00:10:12 2020
+Quartus Prime		18.1.0 Build 625 09/12/2018 SJ Standard Edition
 
 	=========== Files Selected: ===========
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.atm
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.cfm
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.dpi
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.hdbx
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.map.kpt
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.qxp_info
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.rcf
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.cmp.scidsc
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.map.atm
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.map.dpi
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.map.hdbx
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.map.map.kpt
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.map.qxp_info
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/ComputerSystem.map.scidsc
-D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/db/ComputerSystem_tmp_qic_export_8/qic_export_file_list
-	======= Total: 15 files to archive =======
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.atm
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.cfm
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.dpi
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.hdbx
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.map.kpt
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.qxp_info
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.rcf
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/ComputerSystem.cmp.scidsc
+E:/DigitalExp/computersystem/project/db/ComputerSystem_tmp_qic_export_12/qic_export_file_list
+	======= Total: 9 files to archive =======
 
 	================ Status: ===============
 All files archived successfully.
