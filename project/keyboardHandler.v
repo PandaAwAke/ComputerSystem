@@ -144,8 +144,8 @@ end
 assign shift = state[18] | state[89];
 assign ctrl =  state[20] | state_E0[20];
 assign alt =   state[17] | state_E0[17];
-assign capslock = state[88] | capslockflag;
-assign insert = state_E0[112] | insertflag;
+assign capslock = capslockflag;
+assign insert = insertflag;
 assign newKey = buffer_newkey[2];
 assign ASCII_helper = (
 	(scanCode != 0) ? 

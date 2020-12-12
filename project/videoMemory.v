@@ -224,6 +224,7 @@ reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 // 滚屏记录
 reg [7:0]  roll_cnt_lines;			// 滚屏滚掉多少行
 reg [12:0] roll_cnt;					// 滚屏滚掉的下标
+reg [12:0] roll_cnt_max;			// 滚屏滚掉的下标上限
 
 // 方向键标志
 wire direction_flag;
@@ -252,6 +253,7 @@ reg [12:0] running_start_cursor;		// 如果在运行程序，而且需要屏幕�
 initial begin
 	roll_cnt_lines = 0;
 	roll_cnt = 0;
+	roll_cnt_max = 0;
 	cursor = BASH_HEAD_LEN;
 	x_cnt = BASH_HEAD_LEN;
 	y_cnt = 0;
@@ -290,6 +292,7 @@ always @(posedge clk) begin
 			y_cnt <= y_cnt - 1;
 			roll_cnt <= roll_cnt - 70;
 			roll_cnt_lines <= roll_cnt_lines - 1;
+			roll_cnt_max <= roll_cnt_max - 70;
 			running_start_cursor <= running_start_cursor - 70;
 		end
 		
@@ -384,6 +387,7 @@ begin
 					if (y_cnt >= 27) begin										// 27行后自动滚屏
 						roll_cnt <= roll_cnt + 70;
 						roll_cnt_lines <= roll_cnt_lines + 1;
+						roll_cnt_max <= roll_cnt_max + 70;
 					end
 					
 				end else begin
@@ -403,6 +407,7 @@ begin
 						if (y_cnt >= 27) begin									// 27行后自动滚屏
 							roll_cnt <= roll_cnt + 70;
 							roll_cnt_lines <= roll_cnt_lines + 1;
+							roll_cnt_max <= roll_cnt_max + 70;
 						end
 					end else begin
 						x_cnt <= x_cnt + 1;
@@ -442,6 +447,7 @@ begin
 				if (roll_cnt_lines > 0) begin
 					roll_cnt <= roll_cnt - 70;
 					roll_cnt_lines <= roll_cnt_lines - 1;
+					roll_cnt_max <= roll_cnt_max - 70;
 				end
 			end else if (
 				((!running_program) && (x_cnt > 0)) ||
@@ -464,27 +470,34 @@ begin
 			if (y_cnt >= 27) begin										// 27行后自动滚屏
 				roll_cnt <= roll_cnt + 70;
 				roll_cnt_lines <= roll_cnt_lines + 1;
+				roll_cnt_max <= roll_cnt_max + 70;
 			end
 		end else
 		///////////////// Direction Key /////////////////////
 		if (direction_flag) begin							// 方向键
 			case (scanCode_E0)
 				8'h75: begin	// 上
-					vout_color_iterator <= 0;
+					if (roll_cnt_lines > 0) begin
+						roll_cnt_lines <= roll_cnt_lines - 1;
+						roll_cnt <= roll_cnt - 70;
+					end
 				end
 				8'h72: begin	// 下
-					vout_color_iterator <= 2;
+					if (roll_cnt_lines < roll_cnt_max) begin
+						roll_cnt_lines <= roll_cnt_lines + 1;
+						roll_cnt <= roll_cnt + 70;
+					end
 				end
 				8'h6B: begin	// 左
-					vout_color_iterator <= 3;
+					vout_color_iterator <= vout_color_iterator - 1;
 				end
 				8'h74: begin	// 右
-					vout_color_iterator <= 1;
+					vout_color_iterator <= vout_color_iterator + 1;
 				end
 			endcase
 		end else
 		///////////////// Other ASCII Key /////////////////////
-		if (scanCode != 8'h66 && isASCIIkey) begin	// 其他正常字符键
+		if (isASCIIkey) begin	// 其他正常字符键
 			out_lineLen_help <= out_lineLen_help + 1;
 			if (out_lineLen_help < BUFFER_LEN) begin						// 维护输出字符串
 				buffer[out_lineLen_help] <= ASCII;
@@ -504,6 +517,7 @@ begin
 				if (y_cnt >= 27) begin									// 27行后自动滚屏
 					roll_cnt <= roll_cnt + 70;
 					roll_cnt_lines <= roll_cnt_lines + 1;
+					roll_cnt_max <= roll_cnt_max + 70;
 				end
 			end else begin
 				x_cnt <= x_cnt + 1;
