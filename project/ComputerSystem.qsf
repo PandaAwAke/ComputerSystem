@@ -219,7 +219,7 @@ set_global_assignment -name VERILOG_FILE ps2_keyboard.v
 set_global_assignment -name VERILOG_FILE keyboardHandler.v
 set_global_assignment -name VERILOG_FILE ComputerSystem.v
 set_global_assignment -name VERILOG_FILE clkgen.v
-set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK2_50

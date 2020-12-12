@@ -16,6 +16,10 @@
 *.smsg
 *.qws
 *.sof
+*.qarlog
+*.xrf
+*.vo
+*.qxp
 
 # Videos
 *.mp4

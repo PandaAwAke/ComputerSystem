@@ -43,11 +43,11 @@ add, addu, sub, subu, slt, sltu, and, or, xor, nor, sll, srl, sra, sllv, srlv, s
 
 内存最多放16K个32bit，这就是说内存地址的低2位应始终为0，只能放32位的数
 
-![image-20201211144912098](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211144912098.png)
+![image-20201211144912098](image-20201211144912098.png)
 
 内存和指令都可以扩充，目前使用量约为
 
-![image-20201211124535950](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211124535950.png)
+![image-20201211124535950](image-20201211124535950.png)
 
 做了一个简单的地址映射，数据段物理地址为虚拟地址的低16位，代码段物理地址为虚拟地址的低12位
 
@@ -69,9 +69,9 @@ zss的任务：生成`instr_ram.mif`，0x400000处的指令放在0处，以此�
 
 空指令nop为全0
 
-![image-20201211152614555](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211152614555.png)
+![image-20201211152614555](image-20201211152614555.png)
 
-![image-20201211152629727](D:\academic\Experiments in Digital Logical Circuits\ComputerSystem\manual\image-20201211152629727.png)
+![image-20201211152629727](image-20201211152629727.png)
 
 注意
 
@@ -89,4 +89,3 @@ zss的任务：生成`instr_ram.mif`，0x400000处的指令放在0处，以此�
 - 假设`audio on`打开键盘音效，`audio off`则关闭。除非检测到这两个命令，否则control register的audio位不会自动恢复
 - 最终生成的文件中最前面一段是指令解析，之后跳到各个子程序段，每个子程序段结束都得设置control register的end位表明程序结束
 - 每次开始运行（即第一次或每次设置control register的end位之后）都是从第一条指令开始
-
