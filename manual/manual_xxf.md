@@ -85,7 +85,7 @@ zss的任务：生成`instr_ram.mif`，0x400000处的指令放在0处，以此�
 我的一点设想，最终咋整全看zss的
 
 - shell就是shell，不存在什么文本模式，一开始程序读到的一定是命令，不然就输出invalid command等。但是应该可以比如输入vim，就进入不断请求输入的循环，直到输入q，之类的
-- 假设`accum 123`就输出1到123的累加结果，那么`gdb accum 123`进入单步执行模式，最后输出结果，对于程序的区别就是进入子程序段前要设置control register的debug位，结束后恢复之（也许不用恢复，目前的版本默认进入调试模式，正式版本不会默认进入并且会在每次程序初始化时恢复control register的debug位）
+- 假设`accum 123`就输出1到123的累加结果，那么`gdb accum 123`进入单步执行模式，最后输出结果，对于程序的区别就是进入子程序段前要设置control register的debug位，结束后恢复之（没有必要但可能最好恢复，目前的版本不会默认进入并且会在每次程序初始化时恢复control register的debug位）
 - 假设`audio on`打开键盘音效，`audio off`则关闭。除非检测到这两个命令，否则control register的audio位不会自动恢复
 - 最终生成的文件中最前面一段是指令解析，之后跳到各个子程序段，每个子程序段结束都得设置control register的end位表明程序结束
 - 每次开始运行（即第一次或每次设置control register的end位之后）都是从第一条指令开始

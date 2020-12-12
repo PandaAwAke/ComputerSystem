@@ -115,7 +115,7 @@ wire [12:0] out_lineLen;
 wire [7:0] lineOut;
 
 // CPU测试用，最终版本可删除，也可以连到数码管
-wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, hi, lo, sp;
+wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, r27, hi, lo, sp;
 
 wire audio_ena;
 
@@ -237,6 +237,7 @@ CPU cpu(
     .r12(r12),
     .r16(r16),
     .r17(r17),
+	.r27(r27),
     .HI(hi),
     .LO(lo),
     .sp(sp),
