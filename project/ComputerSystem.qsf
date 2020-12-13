@@ -394,9 +394,6 @@ set_global_assignment -name QIP_FILE keys_base.qip
 set_global_assignment -name QIP_FILE ASCII_base.qip
 set_global_assignment -name AUTO_EXPORT_INCREMENTAL_COMPILATION ON
 set_global_assignment -name VERILOG_FILE vga_memory_storage.v
-set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "EchoExample:mys_echoInteract"
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "EchoExample:mys_echoInteract"
-set_global_assignment -name PARTITION_COLOR 39423 -section_id "EchoExample:mys_echoInteract"
 set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "keyboardHandler:mys_kbHandler"
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "keyboardHandler:mys_kbHandler"
 set_global_assignment -name PARTITION_COLOR 52377 -section_id "keyboardHandler:mys_kbHandler"
@@ -431,7 +428,6 @@ set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "clkgen:
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "clkgen:wCLK"
 set_global_assignment -name PARTITION_COLOR 2154272 -section_id "clkgen:wCLK"
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
-set_instance_assignment -name PARTITION_HIERARCHY mysec_42561 -to "EchoExample:mys_echoInteract" -section_id "EchoExample:mys_echoInteract"
 set_instance_assignment -name PARTITION_HIERARCHY curso_98111 -to "videoMemory:mys_vmemory|clkgen:cursorclk" -section_id "clkgen:cursorclk"
 set_instance_assignment -name PARTITION_HIERARCHY mysvg_77f21 -to "clkgen:mys_vgaclk" -section_id "clkgen:mys_vgaclk"
 set_instance_assignment -name PARTITION_HIERARCHY wclk_26991 -to "welcome:welcomer|clkgen:wCLK" -section_id "clkgen:wCLK"
