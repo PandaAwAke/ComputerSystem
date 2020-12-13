@@ -223,6 +223,7 @@ reg [7:0] keys [4199:0];			// 最多存入4200个ASCII码
 // 控制变量
 // 滚屏记录
 reg [7:0]  roll_cnt_lines;			// 滚屏滚掉多少行
+reg [7:0]  roll_cnt_lines_max;	// 滚屏滚掉的行数上限 (用于输入时回到这一行)
 reg [12:0] roll_cnt;					// 滚屏滚掉的下标
 reg [12:0] roll_cnt_max;			// 滚屏滚掉的下标上限
 
@@ -252,6 +253,7 @@ reg [12:0] running_start_cursor;		// 如果在运行程序，而且需要屏幕�
 // REGISTERS INITIALIZATION
 initial begin
 	roll_cnt_lines = 8'd0;
+	roll_cnt_lines_max = 8'd0;
 	roll_cnt = 13'd0;
 	roll_cnt_max = 13'd0;
 	cursor = BASH_HEAD_LEN;
@@ -292,6 +294,7 @@ always @(posedge clk) begin
 			y_cnt <= y_cnt - 1;
 			roll_cnt <= roll_cnt - 70;
 			roll_cnt_lines <= roll_cnt_lines - 1;
+			roll_cnt_lines_max <= roll_cnt_lines_max - 1;
 			roll_cnt_max <= roll_cnt_max - 70;
 			running_start_cursor <= running_start_cursor - 70;
 		end
@@ -387,6 +390,7 @@ begin
 					if (y_cnt >= 27) begin										// 27行后自动滚屏
 						roll_cnt <= roll_cnt + 70;
 						roll_cnt_lines <= roll_cnt_lines + 1;
+						roll_cnt_lines_max <= roll_cnt_lines_max + 1;
 						roll_cnt_max <= roll_cnt_max + 70;
 					end
 					
@@ -407,6 +411,7 @@ begin
 						if (y_cnt >= 27) begin									// 27行后自动滚屏
 							roll_cnt <= roll_cnt + 70;
 							roll_cnt_lines <= roll_cnt_lines + 1;
+							roll_cnt_lines_max <= roll_cnt_lines_max + 1;
 							roll_cnt_max <= roll_cnt_max + 70;
 						end
 					end else begin
@@ -420,6 +425,10 @@ begin
 	///////////////// newKey Coding /////////////////////
 	if (sampling_newKey && keyboard_valid && !inWelcome) begin
 		// 新键处理开始
+		
+		// 先让滚屏回到对应位置
+		roll_cnt <= roll_cnt_max;
+		roll_cnt_lines <= roll_cnt_lines_max;
 		
 		///////////////// Backspace /////////////////////
 		if (scanCode == 8'h66 && cursor > BASH_HEAD_LEN) begin// 退格键
@@ -447,6 +456,7 @@ begin
 				if (roll_cnt_lines > 0) begin
 					roll_cnt <= roll_cnt - 70;
 					roll_cnt_lines <= roll_cnt_lines - 1;
+					roll_cnt_lines_max <= roll_cnt_lines_max - 1;
 					roll_cnt_max <= roll_cnt_max - 70;
 				end
 			end else if (
@@ -470,6 +480,7 @@ begin
 			if (y_cnt >= 27) begin										// 27行后自动滚屏
 				roll_cnt <= roll_cnt + 70;
 				roll_cnt_lines <= roll_cnt_lines + 1;
+				roll_cnt_lines_max <= roll_cnt_lines_max + 1;
 				roll_cnt_max <= roll_cnt_max + 70;
 			end
 		end else
@@ -483,7 +494,7 @@ begin
 					end
 				end
 				8'h72: begin	// 下
-					if (roll_cnt_lines < roll_cnt_max) begin
+					if (roll_cnt < roll_cnt_max) begin
 						roll_cnt_lines <= roll_cnt_lines + 1;
 						roll_cnt <= roll_cnt + 70;
 					end
@@ -517,6 +528,7 @@ begin
 				if (y_cnt >= 27) begin									// 27行后自动滚屏
 					roll_cnt <= roll_cnt + 70;
 					roll_cnt_lines <= roll_cnt_lines + 1;
+					roll_cnt_lines_max <= roll_cnt_lines_max + 1;
 					roll_cnt_max <= roll_cnt_max + 70;
 				end
 			end else begin
