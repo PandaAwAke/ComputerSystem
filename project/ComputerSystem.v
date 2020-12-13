@@ -76,7 +76,7 @@ module ComputerSystem(
 //  REG/WIRE declarations
 //=======================================================
 
-wire reset = 0;
+wire reset = 1'b0;
 wire clrn = ~reset;
 
 // 键盘接线
@@ -113,6 +113,11 @@ wire lineOut_nextASCII;
 wire out_newASCII_ready;
 wire [12:0] out_lineLen;
 wire [7:0] lineOut;
+
+// CPU测试用，最终版本可删除，也可以连到数码管
+wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, hi, lo, sp;
+
+wire audio_ena;
 
 //=======================================================
 //  Modules coding
@@ -215,24 +220,41 @@ welcome welcomer(
 	.newKey(newKey)
 );
 
-
-EchoExample mys_echoInteract(
-	//////////// CLK ////////////
+CPU cpu(
 	.clk(CLOCK_50),
-	//////////// Video Memory : Solved Signal ///////////
-	.in_solved(in_solved),
-	.out_solved(out_solved),
-	.in_require_line(in_require_line),
-	.out_require_line(out_require_line),
-
-	.lineIn_nextASCII(lineIn_nextASCII),				
-	.in_newASCII_ready(in_newASCII_ready),
-	.lineIn(lineIn),
 	
-	.lineOut_nextASCII(lineOut_nextASCII),
-	.out_newASCII_ready(out_newASCII_ready),
-	.out_lineLen(out_lineLen),
-	.lineOut(lineOut)
+	.clrn(1'b1),
+   .key_clk(KEY[3]),
+   .pc(PC),
+   .Instr(instr),
+   .r2(r2),
+   .r8(r8),
+   .r9(r9),
+   .r10(r10),
+   .r11(r11),
+   .r12(r12),
+   .r16(r16),
+   .r17(r17),
+   .HI(hi),
+   .LO(lo),
+   .sp(sp),
+	
+	.audio_ena(audio_ena),
+	.State(LEDR[5:0]),
+	
+	.solved(in_solved),
+	.video_solved(out_solved),
+	.require_input(in_require_line),
+	.input_valid(out_require_line),
+
+	.out_ready(lineIn_nextASCII),				
+	.out_end_n(in_newASCII_ready),
+	.ascii_out(lineIn),
+	
+	.in_ready(lineOut_nextASCII),
+	.in_end_n(out_newASCII_ready),
+	.lineLen(out_lineLen),
+	.ascii_in(lineOut)
 );
 
 //=======================================================

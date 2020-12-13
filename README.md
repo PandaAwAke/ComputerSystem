@@ -1,9 +1,8 @@
 # ComputerSystem
+
 ## 简介
 
 这是数字电路与数字系统实验的最后一次大实验，形式是小组合作，我们的课题是制作简单计算机系统。
-
-
 
 ## 要求
 
@@ -11,15 +10,11 @@
 
 ![image-20201118202625200](README.assets/image-20201118202625200.png)
 
-
-
 ## 工作小组
 
 * 许希帆（CPU、ALU等）
 * 张宇晨（操作接口与软件）
 * 马英硕（外设与拓展）
-
-
 
 ## 实验工具与文档说明
 
@@ -37,25 +32,27 @@
 
 ### MIPS汇编代码参考博客
 
-**原理**
+#### 原理
 
-https://blog.csdn.net/u012837895/article/details/79855896
+[MIPS汇编快速入门_生息之地-CSDN博客_mips汇编](https://blog.csdn.net/u012837895/article/details/79855896)
 
-https://blog.csdn.net/qq_41191281/article/details/85933985
+[MIPS指令集及汇编完全解析_En Takahashi 's blog-CSDN博客_mips指令集](https://blog.csdn.net/qq_41191281/article/details/85933985)
 
-**指令集** (31条)
+#### 指令集
 
-https://blog.csdn.net/yixilee/article/details/4316617
+[MIPS 指令集(共31条）_Jouson的专栏-CSDN博客_sll指令](https://blog.csdn.net/goodlinux/article/details/6731484)
 
+[MIPS 指令集(共31条）_晶喜的专栏-CSDN博客_mips指令集](https://blog.csdn.net/yixilee/article/details/4316617)
 
+[MIPS指令集及汇编完全解析_En Takahashi 's blog-CSDN博客_mips指令集](https://blog.csdn.net/qq_41191281/article/details/85933985)
+
+[MIPS Instruction Reference](http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html)
 
 ### CPU参考博客
 
-https://blog.csdn.net/qq_36312878/article/details/80854435
+[单周期CPU——verilog语言实现_第五清风的博客-CSDN博客_单周期cpu](https://blog.csdn.net/qq_36312878/article/details/80854435)
 
-https://blog.csdn.net/accelerato/article/details/86546751
-
-
+[Verilog单周期CPU设计（超详细）_Ace Cheney的博客-CSDN博客_单周期cpu设计](https://blog.csdn.net/accelerato/article/details/86546751)
 
 ## 项目结构
 
@@ -76,5 +73,5 @@ https://blog.csdn.net/accelerato/article/details/86546751
    1. `EPCS编程.pdf`：DE10-Standard EPCS编程教程文档；
    2. `computer_system.pdf`：实验实现参考文档；
    3. `exp12.pdf`：课程大实验要求文档。
-   
+
 6. `tools`文件夹：工具程序等。
