@@ -18,6 +18,7 @@ module CPU(
     output [31:0] sp,
 
     output audio_ena,
+    output [9:0] led,
     output [5:0] State,
 
     output  reg  solved,
@@ -44,6 +45,7 @@ reg [31:0] instr;
 reg [31:0] index;
 
 assign audio_ena = register[27][4];
+assign led = register[27][25:16];
 
 assign HI = hi;
 assign LO = lo;
@@ -484,7 +486,7 @@ always @ (posedge clk) begin
             if (video_solved) begin
                 PC <= 32'h400000;
                 register[29] <= 32'h7fffeffc;
-                register[27] <= {27'h0, register[27][4], 4'h0};
+                register[27] <= {register[27][31:4], 4'h0};
                 //register[27][3:0] <= 4'h1;
                 register[26] <= 32'h7fff0000;
                 //out_end_n <= 1'b0;

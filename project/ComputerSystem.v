@@ -119,7 +119,8 @@ wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, r27, hi, lo, sp;
 
 wire audio_ena;
 
-assign LEDR[9] = audio_ena;
+//assign LEDR[9] = audio_ena;
+wire [5:0] cpu_state;
 
 //=======================================================
 //  Modules coding
@@ -243,7 +244,8 @@ CPU cpu(
     .sp(sp),
 	
 	.audio_ena(audio_ena),
-	.State(LEDR[5:0]),
+	.led(LEDR[9:0]),
+	.State(cpu_state),
 	
 	.solved(in_solved),
 	.video_solved(out_solved),

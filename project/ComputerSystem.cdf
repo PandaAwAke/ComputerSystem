@@ -6,7 +6,7 @@ JedecChain;
 	P ActionCode(Ign)
 		Device PartName(SOCVHPS) MfrSpec(OpMask(0));
 	P ActionCode(Cfg)
-		Device PartName(5CSXFC6D6F31) Path("D:/academic/Experiments in Digital Logical Circuits/ComputerSystem/project/") File("ComputerSystem.sof") MfrSpec(OpMask(1));
+		Device PartName(5CSXFC6D6F31) Path("D:/academic/Experiments in Digital Logical Circuits/") File("ComputerSystem.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 
