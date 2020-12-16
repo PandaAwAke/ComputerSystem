@@ -87,9 +87,16 @@ wire	ctrl;
 wire	alt;
 wire	capslock;
 wire	insert;
+wire	ESC_n;						// For CPU use
+wire	ENTER_n;						// For CPU use
 wire	newKey;
 wire	isASCIIkey;
 wire	[7:0]	ASCII;
+wire	[15:0]	freq1;
+wire	[15:0]	freq2;
+wire	[8:0]		volume;
+wire	[3:0]		volume_ten;
+wire	[3:0]		volume_d;
 
 // 显存控制模块接线
 wire [9:0] h_addr;
@@ -117,7 +124,7 @@ wire [7:0] lineOut;
 // CPU测试用，最终版本可删除，也可以连到数码管
 wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, hi, lo, sp;
 
-wire audio_ena;
+wire audio_ena = 1;
 
 //=======================================================
 //  Modules coding
@@ -138,9 +145,17 @@ keyboardHandler mys_kbHandler(
 	.alt(alt),
 	.capslock(capslock),
 	.insert(insert),
+	.ESC_n(ESC_n),
+	.ENTER_n(ENTER_n),
 	.newKey(newKey),
 	.isASCIIkey(isASCIIkey),
-	.ASCII(ASCII)
+	.ASCII(ASCII),
+	//////////// Audio ////////////
+	.freq1(freq1),
+	.freq2(freq2),
+	.volume_ten(volume_ten),
+	.volume_d(volume_d),
+	.volume(volume)
 );
 
 
@@ -220,6 +235,30 @@ welcome welcomer(
 	.newKey(newKey)
 );
 
+
+AudioHandler AHandler(
+	.clk(CLOCK_50),
+	.audio_ena(audio_ena),
+	.reset_n(KEY[0]),
+	
+	//////////// AUDIO CONFIG /////////////
+	.AUD_ADCDAT(AUD_ADCDAT),
+	.AUD_ADCLRCK(AUD_ADCLRCK),
+	.AUD_BCLK(AUD_BCLK),
+	.AUD_DACDAT(AUD_DACDAT),
+	.AUD_DACLRCK(AUD_DACLRCK),
+	.AUD_XCK(AUD_XCK),
+	.FPGA_I2C_SCLK(FPGA_I2C_SCLK),
+	.FPGA_I2C_SDAT(FPGA_I2C_SDAT),
+	
+	///////////// From Keyboard ////////////////
+	.freq1(freq1),
+	.freq2(freq2),
+	.volume(volume)
+	
+	
+);
+
 CPU cpu(
 	.clk(CLOCK_50),
 	
@@ -239,7 +278,7 @@ CPU cpu(
    .LO(lo),
    .sp(sp),
 	
-	.audio_ena(audio_ena),
+	//.audio_ena(audio_ena),
 	.State(LEDR[5:0]),
 	
 	.solved(in_solved),
@@ -257,9 +296,45 @@ CPU cpu(
 	.ascii_in(lineOut)
 );
 
+
+always @(posedge CLOCK_50) begin
+	segmentshow(volume_ten, audio_ena, HEX1);
+	segmentshow(volume_d, audio_ena, HEX0);
+end
+
 //=======================================================
 //  rgb control coding
 //=======================================================
 assign real_output_rgb = (inWelcome ? rgb_welcome : rgb);
+
+//=======================================================
+//  task
+//=======================================================
+task segmentshow;
+	input [3:0] number;
+	input en;
+	output reg [6:0] led;
+	if (en)
+		case (number)
+			0: led = 7'b1000000;
+			1: led = 7'b1111001;
+			2: led = 7'b0100100;
+			3: led = 7'b0110000;
+			4: led = 7'b0011001;
+			5: led = 7'b0010010;
+			6: led = 7'b0000010;
+			7: led = 7'b1111000;
+			8: led = 7'b0000000;
+			9: led = 7'b0010000;
+			10:led = 7'b0001000;
+			11:led = 7'b0000011;
+			12:led = 7'b1000110;
+			13:led = 7'b0100001;
+			14:led = 7'b0000110;
+			15:led = 7'b0001110;
+		endcase
+	else
+		led = 7'b1111111;
+endtask
 
 endmodule
