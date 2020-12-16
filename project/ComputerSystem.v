@@ -6,22 +6,22 @@
 module ComputerSystem(
 
 	//////////// CLOCK //////////
-	input 		          		CLOCK2_50,
-	input 		          		CLOCK3_50,
-	input 		          		CLOCK4_50,
+	//input 		          		CLOCK2_50,
+	//input 		          		CLOCK3_50,
+	//input 		          		CLOCK4_50,
 	input 		          		CLOCK_50,
 
 	//////////// KEY //////////
 	input 		     [3:0]		KEY,
 
 	//////////// SW //////////
-	input 		     [9:0]		SW,
+	//input 		     [9:0]		SW,
 
 	//////////// LED //////////
 	output		     [9:0]		LEDR,
 
 	//////////// Seg7 //////////
-	output		     [6:0]		HEX0,
+	/*output		     [6:0]		HEX0,
 	output		     [6:0]		HEX1,
 	output		     [6:0]		HEX2,
 	output		     [6:0]		HEX3,
@@ -39,7 +39,7 @@ module ComputerSystem(
 	output		          		DRAM_LDQM,
 	output		          		DRAM_RAS_N,
 	output		          		DRAM_UDQM,
-	output		          		DRAM_WE_N,
+	output		          		DRAM_WE_N,*/
 
 	//////////// VGA //////////
 	output		          		VGA_BLANK_N,
@@ -61,9 +61,9 @@ module ComputerSystem(
 
 	//////////// PS2 //////////
 	inout 		          		PS2_CLK,
-	inout 		          		PS2_CLK2,
+	//inout 		          		PS2_CLK2,
 	inout 		          		PS2_DAT,
-	inout 		          		PS2_DAT2,
+	//inout 		          		PS2_DAT2,
 
 	//////////// I2C for Audio and Video-In //////////
 	output		          		FPGA_I2C_SCLK,
@@ -114,8 +114,8 @@ wire out_newASCII_ready;
 wire [12:0] out_lineLen;
 wire [7:0] lineOut;
 
-// CPU测试用，最终版本可删除，也可以连到数码管
-wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, r27, hi, lo, sp;
+// CPU测试用，最终版本可删除，也可以连到数码管等
+//wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, r27, hi, lo, sp;
 
 wire audio_ena;
 
@@ -228,7 +228,7 @@ CPU cpu(
 	
     .clrn(KEY[0]),
     .key_clk(KEY[3]),
-    .pc(PC),
+    /*.pc(PC),
     .Instr(instr),
     .r2(r2),
     .r8(r8),
@@ -238,13 +238,13 @@ CPU cpu(
     .r12(r12),
     .r16(r16),
     .r17(r17),
-	.r27(r27),
+    .r27(r27),
     .HI(hi),
     .LO(lo),
-    .sp(sp),
-	
+    .sp(sp),*/
+    
 	.audio_ena(audio_ena),
-	.led(LEDR[9:0]),
+	.led(LEDR),
 	.State(cpu_state),
 	
 	.solved(in_solved),

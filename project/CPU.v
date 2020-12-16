@@ -2,7 +2,7 @@ module CPU(
     input clk,
     input clrn,
     input key_clk,
-    output [31:0] pc,
+    /*output [31:0] pc,
     output [31:0] Instr,
     output [31:0] r2,
     output [31:0] r8,
@@ -15,7 +15,7 @@ module CPU(
     output [31:0] r27,
     output [31:0] HI,
     output [31:0] LO,
-    output [31:0] sp,
+    output [31:0] sp,*/
 
     output audio_ena,
     output [9:0] led,
@@ -28,7 +28,7 @@ module CPU(
 
     input        out_ready,
     output  reg  out_end_n,
-    output reg [7:0] ascii_out,
+    output  reg  [7:0] ascii_out,
     
     output  reg  in_ready,
     input        in_end_n,
@@ -42,11 +42,10 @@ reg [31:0] PC = 32'h400000, hi, lo;
 wire [31:0] div_hi, div_lo, mul_hi;
 reg [31:0] register[31:0];
 reg [31:0] instr;
-reg [31:0] index;
 
 assign audio_ena = register[27][4];
-assign led = register[27][25:16];
-
+assign led[9:0] = register[27][25:16];
+/*
 assign HI = hi;
 assign LO = lo;
 
@@ -62,7 +61,7 @@ assign r16 = register[16];
 assign r17 = register[17];
 assign r27 = register[27];
 assign sp = register[29];
-
+*/
 wire [5:0] op = instr[31:26];
 wire [4:0] rs = instr[25:21];
 wire [4:0] rt = instr[20:16];
@@ -486,8 +485,9 @@ always @ (posedge clk) begin
             if (video_solved) begin
                 PC <= 32'h400000;
                 register[29] <= 32'h7fffeffc;
-                register[27] <= {register[27][31:5], 5'h0};
+                //register[27] <= {register[27][31:5], 5'b00000};
                 //register[27][3:0] <= 4'h1;
+					 register[27][4:0] <= 5'b00000;
                 register[26] <= 32'h7fff0000;
                 //out_end_n <= 1'b0;
                 //require_input <= 1'b0;
