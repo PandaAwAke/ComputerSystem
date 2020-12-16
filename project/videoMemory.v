@@ -425,6 +425,11 @@ begin
 	///////////////// newKey Coding /////////////////////
 	if (sampling_newKey && keyboard_valid && !inWelcome) begin
 		// 新键处理开始
+		if (!direction_flag) begin
+			// 先让滚屏回到对应位置
+			roll_cnt <= roll_cnt_max;
+			roll_cnt_lines <= roll_cnt_lines_max;
+		end
 		
 		// 先让滚屏回到对应位置
 		roll_cnt <= roll_cnt_max;

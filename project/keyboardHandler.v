@@ -17,9 +17,18 @@ module keyboardHandler(
 	output	alt,
 	output	capslock,
 	output	insert,
+	output	ESC_n,
+	output	ENTER_n,
 	output	newKey,
 	output	isASCIIkey,
-	output	[7:0]	ASCII
+	output	[7:0]	ASCII,
+	
+	///////// Audio //////////
+	output	reg	[15:0]	freq1,
+	output	reg	[15:0]	freq2,
+	output	reg	[3:0]		volume_ten,
+	output	reg	[3:0]		volume_d,
+	output	reg	[8:0]		volume
 );
 
 //=======================================================
@@ -46,6 +55,8 @@ reg capslockflag;
 reg insertflag;
 reg [2:0] buffer_newkey;
 
+assign kb_state = state;
+
 initial begin
 	// output initialization
 	scanCode = 0;
@@ -59,6 +70,21 @@ initial begin
 	capslockflag = 0;
 	insertflag = 0;
 	buffer_newkey = 0;
+end
+
+
+///////// For Audio ////////////
+reg [7:0] tag_freq1;
+reg [7:0] tag_freq2;
+
+initial begin
+	freq1 = 0;
+	freq2 = 0;
+	tag_freq1 = 0;
+	tag_freq2 = 0;
+	volume_ten = 3;
+	volume_d = 0;
+	volume = 77;
 end
 
 //=======================================================
@@ -85,13 +111,13 @@ always @(posedge clk) begin
 		buffer_newkey <= {buffer_newkey[1:0], 1'b0};
 	end else
 		if (ready) begin
-			if (data == 8'hF0) begin
+			if (data == 8'hE0) begin
+				preE0 <= 1;
+				breaking <= 0;
+				buffer_newkey <= {buffer_newkey[1:0], 1'b0};
+			end else if (data == 8'hF0) begin
 				// 改变状态
 				breaking <= 1;
-				preE0 <= 0;
-				buffer_newkey <= {buffer_newkey[1:0], 1'b0};
-			end else if (data == 8'hE0) begin
-				preE0 <= 1;
 				buffer_newkey <= {buffer_newkey[1:0], 1'b0};
 			end else begin
 				// 要么从InitX到X，要么从breakX到InitX
@@ -115,6 +141,18 @@ always @(posedge clk) begin
 						state[data] <= 0;
 						scanCode <= 0;
 						buffer_newkey <= {buffer_newkey[1:0], 1'b0};
+						//////////// For Audio ///////////
+						if (keyIndex(data) < 8) begin			  // 不是无关键
+							state[keyIndex(data)] <= 0;
+							if (tag_freq1 == data) begin
+								tag_freq1 <= 0;
+								freq1 <= 0;
+							end else if (tag_freq2 == data) begin
+								tag_freq2 <= 0;
+								freq2 <= 0;
+							end
+						end
+						//////////////////////////////////
 					end
 				end else begin
 					if (preE0) begin			// 前一个是E0
@@ -129,6 +167,39 @@ always @(posedge clk) begin
 						scanCode <= data;
 						scanCode_E0 <= 0;
 						buffer_newkey <= {buffer_newkey[1:0], 1'b1};
+						
+/////////////////////// For Audio /////////////////////////////////
+						if (keyIndex(data) == 8) begin
+							if (volume_ten < 8) begin // 音量加，上限80
+								volume <= volume + 1;
+								if (volume_d < 9)
+									volume_d <= volume_d + 1;
+								else begin
+									volume_ten <= volume_ten + 1;
+									volume_d <= 0;
+								end
+							end
+						end else
+						if (keyIndex(data) == 9) begin
+							if (volume_ten > 0 || volume_d > 0) begin // 音量减，下限0
+								volume <= volume - 1;
+								if (volume_d > 0)
+									volume_d <= volume_d - 1;
+								else begin
+									volume_ten <= volume_ten - 1;
+									volume_d <= 9;
+								end
+							end
+						end else begin
+							if (tag_freq1 == 0 && data != tag_freq2) begin
+								freq1 <= getFrequent(keyIndex(data));
+								tag_freq1 <= data;
+							end else if (data != tag_freq1) begin
+								freq2 <= getFrequent(keyIndex(data));
+								tag_freq2 <= data;
+							end
+						end
+///////////////////////////////////////////////////////////////////
 					end
 				end
 			end
@@ -146,6 +217,8 @@ assign ctrl =  state[20] | state_E0[20];
 assign alt =   state[17] | state_E0[17];
 assign capslock = capslockflag;
 assign insert = insertflag;
+assign ESC_n = !state[118];
+assign ENTER_n = !(state[90] | state_E0[90]);
 assign newKey = buffer_newkey[2];
 assign ASCII_helper = (
 	(scanCode != 0) ? 
@@ -211,6 +284,36 @@ function [7:0] capslockCase;
 	else
 		capslockCase = rawCase;
 	end
+endfunction
+
+//=======================================================
+//  Audio Functions
+//=======================================================
+
+function [3:0] keyIndex;
+	input [7:0] scanCode;
+	case (scanCode)
+		8'h16: keyIndex = 8; // 音量加
+		8'h1E: keyIndex = 9; // 音量减
+		8'h1C: keyIndex = 0; 8'h1B: keyIndex = 1; 8'h23: keyIndex = 2;
+		8'h2B: keyIndex = 3; 8'h34: keyIndex = 4; 8'h33: keyIndex = 5;
+		8'h3B: keyIndex = 6; 8'h42: keyIndex = 7; default: keyIndex = 8;
+	endcase
+endfunction
+
+function [15:0] getFrequent;
+	input [3:0] index;
+	case (index)
+		0: getFrequent = 16'h2CA;
+		1: getFrequent = 16'h322;
+		2: getFrequent = 16'h384;
+		3: getFrequent = 16'h3BA;
+		4: getFrequent = 16'h42E;
+		5: getFrequent = 16'h4B1;
+		6: getFrequent = 16'h544;
+		7: getFrequent = 16'h594;
+		default: getFrequent = 0;
+	endcase
 endfunction
 
 endmodule

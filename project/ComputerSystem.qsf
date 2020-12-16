@@ -6,7 +6,7 @@ set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CSXFC6D6F31C6
 set_global_assignment -name TOP_LEVEL_ENTITY ComputerSystem
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.0.2
-set_global_assignment -name LAST_QUARTUS_VERSION "17.1.0 Lite Edition"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Standard Edition"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:40:10 NOVEMBER 17,2020"
 set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 896
@@ -219,7 +219,7 @@ set_global_assignment -name VERILOG_FILE ps2_keyboard.v
 set_global_assignment -name VERILOG_FILE keyboardHandler.v
 set_global_assignment -name VERILOG_FILE ComputerSystem.v
 set_global_assignment -name VERILOG_FILE clkgen.v
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK2_50
@@ -387,15 +387,76 @@ set_global_assignment -name QIP_FILE reg_keysX.qip
 set_global_assignment -name QIP_FILE reg_keysY.qip
 set_global_assignment -name QIP_FILE baseX.qip
 set_global_assignment -name QIP_FILE baseY.qip
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name QIP_FILE keys_base.qip
 set_global_assignment -name QIP_FILE ASCII_base.qip
 set_global_assignment -name AUTO_EXPORT_INCREMENTAL_COMPILATION ON
 set_global_assignment -name VERILOG_FILE vga_memory_storage.v
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "keyboardHandler:mys_kbHandler"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "keyboardHandler:mys_kbHandler"
+set_global_assignment -name PARTITION_COLOR 52377 -section_id "keyboardHandler:mys_kbHandler"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "clkgen:mys_vgaclk"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "clkgen:mys_vgaclk"
+set_global_assignment -name PARTITION_COLOR 16776960 -section_id "clkgen:mys_vgaclk"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "videoMemory:mys_vmemory"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "videoMemory:mys_vmemory"
+set_global_assignment -name PARTITION_COLOR 16711935 -section_id "videoMemory:mys_vmemory"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "vga_ctrl:vga_control"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "vga_ctrl:vga_control"
+set_global_assignment -name PARTITION_COLOR 65535 -section_id "vga_ctrl:vga_control"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "clkgen:cursorclk"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "clkgen:cursorclk"
+set_global_assignment -name PARTITION_COLOR 16777164 -section_id "clkgen:cursorclk"
 set_global_assignment -name VERILOG_FILE videoMemory_assigns.v
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "videoMemory_assign:vAssign"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "videoMemory_assign:vAssign"
+set_global_assignment -name PARTITION_COLOR 10198015 -section_id "videoMemory_assign:vAssign"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "videoMemoryStorage:vStorage"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "videoMemoryStorage:vStorage"
+set_global_assignment -name PARTITION_COLOR 32896 -section_id "videoMemoryStorage:vStorage"
 set_global_assignment -name VERILOG_FILE welcome.v
 set_global_assignment -name QIP_FILE welcomeStorage.qip
-set_global_assignment -name FLOW_ENABLE_RTL_VIEWER ON
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "welcome:welcomer"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "welcome:welcomer"
+set_global_assignment -name PARTITION_COLOR 14622752 -section_id "welcome:welcomer"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "ps2_keyboard:inputer"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "ps2_keyboard:inputer"
+set_global_assignment -name PARTITION_COLOR 2105567 -section_id "ps2_keyboard:inputer"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "clkgen:wCLK"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "clkgen:wCLK"
+set_global_assignment -name PARTITION_COLOR 2154272 -section_id "clkgen:wCLK"
+set_global_assignment -name QIP_FILE audio_clk.qip
+set_global_assignment -name SIP_FILE audio_clk.sip
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "AudioHandler:AHandler"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "AudioHandler:AHandler"
+set_global_assignment -name PARTITION_COLOR 2154272 -section_id "AudioHandler:AHandler"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "I2S_Audio:myaudio"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "I2S_Audio:myaudio"
+set_global_assignment -name PARTITION_COLOR 11908596 -section_id "I2S_Audio:myaudio"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "I2C_Audio_Config:myconfig"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "I2C_Audio_Config:myconfig"
+set_global_assignment -name PARTITION_COLOR 11924661 -section_id "I2C_Audio_Config:myconfig"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "audio_clk:u1"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "audio_clk:u1"
+set_global_assignment -name PARTITION_COLOR 11925238 -section_id "audio_clk:u1"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id "clkgen:my_i2c_clk"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "clkgen:my_i2c_clk"
+set_global_assignment -name PARTITION_COLOR 11925238 -section_id "clkgen:my_i2c_clk"
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_instance_assignment -name PARTITION_HIERARCHY curso_98111 -to "videoMemory:mys_vmemory|clkgen:cursorclk" -section_id "clkgen:cursorclk"
+set_instance_assignment -name PARTITION_HIERARCHY mysvg_77f21 -to "clkgen:mys_vgaclk" -section_id "clkgen:mys_vgaclk"
+set_instance_assignment -name PARTITION_HIERARCHY wclk_26991 -to "welcome:welcomer|clkgen:wCLK" -section_id "clkgen:wCLK"
+set_instance_assignment -name PARTITION_HIERARCHY myskb_34d71 -to "keyboardHandler:mys_kbHandler" -section_id "keyboardHandler:mys_kbHandler"
+set_instance_assignment -name PARTITION_HIERARCHY input_07061 -to "keyboardHandler:mys_kbHandler|ps2_keyboard:inputer" -section_id "ps2_keyboard:inputer"
+set_instance_assignment -name PARTITION_HIERARCHY vgaco_00f71 -to "vga_ctrl:vga_control" -section_id "vga_ctrl:vga_control"
+set_instance_assignment -name PARTITION_HIERARCHY mysvm_e3ab1 -to "videoMemory:mys_vmemory" -section_id "videoMemory:mys_vmemory"
+set_instance_assignment -name PARTITION_HIERARCHY vstor_3c251 -to "videoMemory:mys_vmemory|videoMemoryStorage:vStorage" -section_id "videoMemoryStorage:vStorage"
+set_instance_assignment -name PARTITION_HIERARCHY vassi_98a31 -to "videoMemory:mys_vmemory|videoMemory_assign:vAssign" -section_id "videoMemory_assign:vAssign"
+set_instance_assignment -name PARTITION_HIERARCHY welco_8a5a1 -to "welcome:welcomer" -section_id "welcome:welcomer"
+set_instance_assignment -name PARTITION_HIERARCHY ahand_2bb11 -to "AudioHandler:AHandler" -section_id "AudioHandler:AHandler"
+set_instance_assignment -name PARTITION_HIERARCHY myaud_2a3d1 -to "AudioHandler:AHandler|I2S_Audio:myaudio" -section_id "I2S_Audio:myaudio"
+set_instance_assignment -name PARTITION_HIERARCHY mycon_684f1 -to "AudioHandler:AHandler|I2C_Audio_Config:myconfig" -section_id "I2C_Audio_Config:myconfig"
+set_instance_assignment -name PARTITION_HIERARCHY u1_f8671 -to "AudioHandler:AHandler|audio_clk:u1" -section_id "audio_clk:u1"
+set_instance_assignment -name PARTITION_HIERARCHY myi2c_dcbd1 -to "AudioHandler:AHandler|clkgen:my_i2c_clk" -section_id "clkgen:my_i2c_clk"
