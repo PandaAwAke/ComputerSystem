@@ -1,4 +1,4 @@
- -- Copyright (C) 2018  Intel Corporation. All rights reserved.
+ -- Copyright (C) 2017  Intel Corporation. All rights reserved.
  -- Your use of Intel Corporation's design tools, logic functions 
  -- and other software and tools, and its AMPP partner logic 
  -- functions, and any output files from any of the foregoing 
@@ -74,7 +74,7 @@
  -- Pin directions (input, output or bidir) are based on device operating in user mode.
  ---------------------------------------------------------------------------------
 
-Quartus Prime Version 18.1.0 Build 625 09/12/2018 SJ Standard Edition
+Quartus Prime Version 17.1.0 Build 590 10/25/2017 SJ Lite Edition
 CHIP  "ComputerSystem"  ASSIGNED TO AN: 5CSXFC6D6F31C6
 
 Pin Name/Usage               : Location  : Dir.   : I/O Standard      : Voltage : I/O Bank  : User Assignment
@@ -124,10 +124,10 @@ KEY[2]                       : AA14      : input  : 3.3-V LVTTL       :         
 KEY[3]                       : AA15      : input  : 3.3-V LVTTL       :         : 3B        : Y              
 RESERVED_INPUT_WITH_WEAK_PULLUP : AA16      :        :                   :         : 4A        :                
 VCCIO4A                      : AA17      : power  :                   : 3.3V    : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AA18      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AA19      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AA20      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AA21      :        :                   :         : 4A        :                
+HEX2[2]                      : AA18      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX3[5]                      : AA19      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX3[3]                      : AA20      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX2[0]                      : AA21      : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : AA22      : gnd    :                   :         :           :                
 VCCPGM                       : AA23      : power  :                   : 1.8V/2.5V/3.0V/3.3V :           :                
 LEDR[0]                      : AA24      : output : 3.3-V LVTTL       :         : 5A        : Y              
@@ -153,11 +153,11 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : AB13      :        :                   :      
 VCCIO3B                      : AB14      : power  :                   : 3.3V    : 3B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AB15      :        :                   :         : 3B        :                
 VCC_AUX                      : AB16      : power  :                   : 2.5V    :           :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AB17      :        :                   :         : 4A        :                
+HEX2[1]                      : AB17      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCCPD3B4A                    : AB18      : power  :                   : 3.3V    : 3B, 4A    :                
 GND                          : AB19      : gnd    :                   :         :           :                
 VCCPD3B4A                    : AB20      : power  :                   : 3.3V    : 3B, 4A    :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AB21      :        :                   :         : 4A        :                
+HEX5[6]                      : AB21      : output : 3.3-V LVTTL       :         : 4A        : Y              
 LEDR[8]                      : AB22      : output : 3.3-V LVTTL       :         : 5A        : Y              
 LEDR[1]                      : AB23      : output : 3.3-V LVTTL       :         : 5A        : Y              
 VCCIO5A                      : AB24      : power  :                   : 3.3V    : 5A        :                
@@ -186,7 +186,7 @@ GND                          : AC16      : gnd    :                   :         
 VCCPD3B4A                    : AC17      : power  :                   : 3.3V    : 3B, 4A    :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AC18      :        :                   :         : 4A        :                
 VCCPD3B4A                    : AC19      : power  :                   : 3.3V    : 3B, 4A    :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AC20      :        :                   :         : 4A        :                
+HEX3[4]                      : AC20      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCCIO4A                      : AC21      : power  :                   : 3.3V    : 4A        :                
 LEDR[9]                      : AC22      : output : 3.3-V LVTTL       :         : 4A        : Y              
 LEDR[2]                      : AC23      : output : 3.3-V LVTTL       :         : 4A        : Y              
@@ -213,11 +213,11 @@ VCCIO3B                      : AD13      : power  :                   : 3.3V    
 RESERVED_INPUT_WITH_WEAK_PULLUP : AD14      :        :                   :         : 3B        :                
 DNU                          : AD15      :        :                   :         :           :                
 VCCPD3B4A                    : AD16      : power  :                   : 3.3V    : 3B, 4A    :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AD17      :        :                   :         : 4A        :                
+HEX1[3]                      : AD17      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCCIO4A                      : AD18      : power  :                   : 3.3V    : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AD19      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AD20      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AD21      :        :                   :         : 4A        :                
+HEX3[2]                      : AD19      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX3[6]                      : AD20      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX4[0]                      : AD21      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCC_AUX                      : AD22      : power  :                   : 2.5V    :           :                
 GND                          : AD23      : gnd    :                   :         :           :                
 LEDR[3]                      : AD24      : output : 3.3-V LVTTL       :         : 4A        : Y              
@@ -242,14 +242,14 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : AE12      :        :                   :      
 RESERVED_INPUT_WITH_WEAK_PULLUP : AE13      :        :                   :         : 3B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AE14      :        :                   :         : 3B        :                
 VCCIO3B                      : AE15      : power  :                   : 3.3V    : 3B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AE16      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AE17      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AE18      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AE19      :        :                   :         : 4A        :                
+HEX1[2]                      : AE16      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX1[5]                      : AE17      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX1[4]                      : AE18      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX5[4]                      : AE19      : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : AE20      : gnd    :                   :         :           :                
 VCCPD3B4A                    : AE21      : power  :                   : 3.3V    : 3B, 4A    :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AE22      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AE23      :        :                   :         : 4A        :                
+HEX4[2]                      : AE22      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX4[3]                      : AE23      : output : 3.3-V LVTTL       :         : 4A        : Y              
 LEDR[6]                      : AE24      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCCIO4A                      : AE25      : power  :                   : 3.3V    : 4A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AE26      :        :                   :         : 5A        :                
@@ -272,14 +272,14 @@ GND                          : AF12      : gnd    :                   :         
 RESERVED_INPUT_WITH_WEAK_PULLUP : AF13      :        :                   :         : 3B        :                
 CLOCK_50                     : AF14      : input  : 3.3-V LVTTL       :         : 3B        : Y              
 RESERVED_INPUT_WITH_WEAK_PULLUP : AF15      :        :                   :         : 3B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AF16      :        :                   :         : 4A        :                
+HEX1[0]                      : AF16      : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : AF17      : gnd    :                   :         :           :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AF18      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AF19      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AF20      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AF21      :        :                   :         : 4A        :                
+HEX2[5]                      : AF18      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX5[5]                      : AF19      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX5[2]                      : AF20      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX5[0]                      : AF21      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCCIO4A                      : AF22      : power  :                   : 3.3V    : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AF23      :        :                   :         : 4A        :                
+HEX4[5]                      : AF23      : output : 3.3-V LVTTL       :         : 4A        : Y              
 LEDR[7]                      : AF24      : output : 3.3-V LVTTL       :         : 4A        : Y              
 LEDR[5]                      : AF25      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_R[5]                     : AF26      : output : 3.3-V LVTTL       :         : 4A        : Y              
@@ -302,14 +302,14 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : AG12      :        :                   :      
 RESERVED_INPUT_WITH_WEAK_PULLUP : AG13      :        :                   :         : 3B        :                
 GND                          : AG14      : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AG15      :        :                   :         : 3B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG16      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG17      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG18      :        :                   :         : 4A        :                
+HEX0[3]                      : AG16      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX0[2]                      : AG17      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX0[5]                      : AG18      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VCCIO4A                      : AG19      : power  :                   : 3.3V    : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG20      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG21      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG22      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AG23      :        :                   :         : 4A        :                
+HEX5[3]                      : AG20      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX5[1]                      : AG21      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX4[1]                      : AG22      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX4[4]                      : AG23      : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : AG24      : gnd    :                   :         :           :                
 LEDR[4]                      : AG25      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_R[6]                     : AG26      : output : 3.3-V LVTTL       :         : 4A        : Y              
@@ -333,12 +333,12 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : AH13      :        :                   :      
 RESERVED_INPUT_WITH_WEAK_PULLUP : AH14      :        :                   :         : 3B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AH15      :        :                   :         : 3B        :                
 VCCIO4A                      : AH16      : power  :                   : 3.3V    : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AH17      :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AH18      :        :                   :         : 4A        :                
+HEX0[4]                      : AH17      : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX0[6]                      : AH18      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_B[4]                     : AH19      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_B[2]                     : AH20      : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : AH21      : gnd    :                   :         :           :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AH22      :        :                   :         : 4A        :                
+HEX4[6]                      : AH22      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_G[7]                     : AH23      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_G[5]                     : AH24      : output : 3.3-V LVTTL       :         : 4A        : Y              
 VGA_G[2]                     : AH25      : output : 3.3-V LVTTL       :         : 4A        : Y              
@@ -900,9 +900,9 @@ GND                          : V12       : gnd    :                   :         
 VCC                          : V13       : power  :                   : 1.1V    :           :                
 GND                          : V14       : gnd    :                   :         :           :                
 VCC                          : V15       : power  :                   : 1.1V    :           :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : V16       :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : V17       :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : V18       :        :                   :         : 4A        :                
+HEX1[1]                      : V16       : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX1[6]                      : V17       : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX0[1]                      : V18       : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : V19       : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : V20       :        :                   :         : 6B        :                
 GND                          : V21       : gnd    :                   :         :           :                
@@ -930,10 +930,10 @@ VCC                          : W12       : power  :                   : 1.1V    
 GND                          : W13       : gnd    :                   :         :           :                
 VCC                          : W14       : power  :                   : 1.1V    :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : W15       :        :                   :         : 3B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : W16       :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : W17       :        :                   :         : 4A        :                
+HEX2[6]                      : W16       : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX0[0]                      : W17       : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : W18       : gnd    :                   :         :           :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : W19       :        :                   :         : 4A        :                
+HEX3[1]                      : W19       : output : 3.3-V LVTTL       :         : 4A        : Y              
 RESERVED_INPUT_WITH_WEAK_PULLUP : W20       :        :                   :         : 5A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : W21       :        :                   :         : 5A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : W22       :        :                   :         : 5A        :                
@@ -961,9 +961,9 @@ VCC                          : Y13       : power  :                   : 1.1V    
 GND                          : Y14       : gnd    :                   :         :           :                
 GND                          : Y15       : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : Y16       :        :                   :         : 3B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : Y17       :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : Y18       :        :                   :         : 4A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : Y19       :        :                   :         : 4A        :                
+HEX2[3]                      : Y17       : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX2[4]                      : Y18       : output : 3.3-V LVTTL       :         : 4A        : Y              
+HEX3[0]                      : Y19       : output : 3.3-V LVTTL       :         : 4A        : Y              
 GND                          : Y20       : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : Y21       :        :                   :         : 5A        :                
 VCCA_FPLL                    : Y22       : power  :                   : 2.5V    :           :                
