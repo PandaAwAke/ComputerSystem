@@ -6,22 +6,22 @@
 module ComputerSystem(
 
 	//////////// CLOCK //////////
-	input 		          		CLOCK2_50,
-	input 		          		CLOCK3_50,
-	input 		          		CLOCK4_50,
+	//input 		          		CLOCK2_50,
+	//input 		          		CLOCK3_50,
+	//input 		          		CLOCK4_50,
 	input 		          		CLOCK_50,
 
 	//////////// KEY //////////
 	input 		     [3:0]		KEY,
 
 	//////////// SW //////////
-	input 		     [9:0]		SW,
+	//input 		     [9:0]		SW,
 
 	//////////// LED //////////
 	output		     [9:0]		LEDR,
 
 	//////////// Seg7 //////////
-	output		     [6:0]		HEX0,
+	/*output		     [6:0]		HEX0,
 	output		     [6:0]		HEX1,
 	output		     [6:0]		HEX2,
 	output		     [6:0]		HEX3,
@@ -39,7 +39,7 @@ module ComputerSystem(
 	output		          		DRAM_LDQM,
 	output		          		DRAM_RAS_N,
 	output		          		DRAM_UDQM,
-	output		          		DRAM_WE_N,
+	output		          		DRAM_WE_N,*/
 
 	//////////// VGA //////////
 	output		          		VGA_BLANK_N,
@@ -61,9 +61,9 @@ module ComputerSystem(
 
 	//////////// PS2 //////////
 	inout 		          		PS2_CLK,
-	inout 		          		PS2_CLK2,
+	//inout 		          		PS2_CLK2,
 	inout 		          		PS2_DAT,
-	inout 		          		PS2_DAT2,
+	//inout 		          		PS2_DAT2,
 
 	//////////// I2C for Audio and Video-In //////////
 	output		          		FPGA_I2C_SCLK,
@@ -76,12 +76,195 @@ module ComputerSystem(
 //  REG/WIRE declarations
 //=======================================================
 
+wire reset = 1'b0;
+wire clrn = ~reset;
 
+// 键盘接线
+wire	[7:0] scanCode;
+wire	[7:0] scanCode_E0;
+wire	shift;
+wire	ctrl;
+wire	alt;
+wire	capslock;
+wire	insert;
+wire	newKey;
+wire	isASCIIkey;
+wire	[7:0]	ASCII;
 
+// 显存控制模块接线
+wire [9:0] h_addr;
+wire [9:0] v_addr;
+wire [23:0] rgb;					// VideoMemory给出的输出颜色
+wire [23:0] rgb_welcome;		// Welcome给出的输出颜色
+wire [23:0] real_output_rgb;	// 真正的输出颜色
+wire inWelcome;
+
+// 显存接口模块接线
+wire in_solved;
+wire out_solved;
+wire in_require_line;
+wire out_require_line;
+
+wire lineIn_nextASCII;
+wire in_newASCII_ready;
+wire [7:0] lineIn;
+
+wire lineOut_nextASCII;
+wire out_newASCII_ready;
+wire [12:0] out_lineLen;
+wire [7:0] lineOut;
+
+// CPU测试用，最终版本可删除，也可以连到数码管等
+//wire [31:0] PC, instr, r2, r8,  r9, r10, r11, r12, r16, r17, r27, hi, lo, sp;
+
+wire audio_ena;
+
+//assign LEDR[9] = audio_ena;
+wire [5:0] cpu_state;
 
 //=======================================================
-//  Structural coding
+//  Modules coding
 //=======================================================
 
+keyboardHandler mys_kbHandler(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	.clrn(clrn),
+	//////////// PS2 //////////
+	.PS2_CLK(PS2_CLK),
+	.PS2_DAT(PS2_DAT),
+	//////////// output //////////
+	.scanCode(scanCode),
+	.scanCode_E0(scanCode_E0),
+	.shift(shift),
+	.ctrl(ctrl),
+	.alt(alt),
+	.capslock(capslock),
+	.insert(insert),
+	.newKey(newKey),
+	.isASCIIkey(isASCIIkey),
+	.ASCII(ASCII)
+);
+
+
+clkgen #(25000000) mys_vgaclk(
+	.clkin(CLOCK_50), 
+	.rst(reset), 
+	.clken(1'b1), 
+	.clkout(VGA_CLK)
+);
+
+
+vga_ctrl vga_control(
+	.pclk(VGA_CLK), 
+	.reset(reset),
+	.vga_data(real_output_rgb),
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.hsync(VGA_HS),
+	.vsync(VGA_VS),
+	.valid(VGA_BLANK_N),
+	.vga_r(VGA_R),
+	.vga_g(VGA_G),
+	.vga_b(VGA_B)
+);
+
+
+videoMemory mys_vmemory(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	
+	//////////// VGA //////////
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.rgb(rgb),
+	
+	//////////// KBHandler //////////
+	.scanCode(scanCode),
+	.scanCode_E0(scanCode_E0),
+	.shift(shift),
+	.ctrl(ctrl),
+	.alt(alt),
+	.capslock(capslock),
+	.insert(insert),
+	.newKey(newKey),
+	.ASCII(ASCII),
+	.isASCIIkey(isASCIIkey),
+	
+	//////////// Interface ///////////
+	.inWelcome(inWelcome),
+	
+	.in_solved(in_solved),
+	.out_solved(out_solved),
+	.in_require_line(in_require_line),
+	.out_require_line(out_require_line),
+	
+	.lineIn_nextASCII(lineIn_nextASCII),
+	.in_newASCII_ready(in_newASCII_ready),
+	.lineIn(lineIn),
+	
+	.lineOut_nextASCII(lineOut_nextASCII),
+	.out_newASCII_ready(out_newASCII_ready),	
+	.out_lineLen(out_lineLen),
+	.lineOut(lineOut)
+);
+
+welcome welcomer(
+	//////////// CLK //////////
+	.clk(CLOCK_50),
+	
+	//////////// VGA //////////
+	.h_addr(h_addr),
+	.v_addr(v_addr),
+	.rgb_welcome(rgb_welcome),
+	
+	//////////// INTERFACE //////////
+	.inWelcome(inWelcome),
+	.newKey(newKey)
+);
+
+CPU cpu(
+    .clk(CLOCK_50),
+	
+    .clrn(KEY[0]),
+    .key_clk(KEY[3]),
+    /*.pc(PC),
+    .Instr(instr),
+    .r2(r2),
+    .r8(r8),
+    .r9(r9),
+    .r10(r10),
+    .r11(r11),
+    .r12(r12),
+    .r16(r16),
+    .r17(r17),
+    .r27(r27),
+    .HI(hi),
+    .LO(lo),
+    .sp(sp),*/
+    
+	.audio_ena(audio_ena),
+	.led(LEDR),
+	.State(cpu_state),
+	
+	.solved(in_solved),
+	.video_solved(out_solved),
+	.require_input(in_require_line),
+	.input_valid(out_require_line),
+
+	.out_ready(lineIn_nextASCII),				
+	.out_end_n(in_newASCII_ready),
+	.ascii_out(lineIn),
+	
+	.in_ready(lineOut_nextASCII),
+	.in_end_n(out_newASCII_ready),
+	.lineLen(out_lineLen),
+	.ascii_in(lineOut)
+);
+
+//=======================================================
+//  rgb control coding
+//=======================================================
+assign real_output_rgb = (inWelcome ? rgb_welcome : rgb);
 
 endmodule
