@@ -28,7 +28,8 @@ module keyboardHandler(
 	output	reg	[15:0]	freq2,
 	output	reg	[3:0]		volume_ten,
 	output	reg	[3:0]		volume_d,
-	output	reg	[8:0]		volume
+	output	reg	[8:0]		volume,
+	input		audio_ena
 );
 
 //=======================================================
@@ -54,8 +55,6 @@ reg preE0;
 reg capslockflag;
 reg insertflag;
 reg [2:0] buffer_newkey;
-
-assign kb_state = state;
 
 initial begin
 	// output initialization
@@ -141,18 +140,19 @@ always @(posedge clk) begin
 						state[data] <= 0;
 						scanCode <= 0;
 						buffer_newkey <= {buffer_newkey[1:0], 1'b0};
-						//////////// For Audio ///////////
-						if (keyIndex(data) < 8) begin			  // 不是无关键
-							state[keyIndex(data)] <= 0;
-							if (tag_freq1 == data) begin
-								tag_freq1 <= 0;
-								freq1 <= 0;
-							end else if (tag_freq2 == data) begin
-								tag_freq2 <= 0;
-								freq2 <= 0;
+//////////////// For Audio ///////////////////////////////////////////
+						if (audio_ena) begin
+							if (keyIndex(data) < 10) begin			  // 不是无关键
+								if (tag_freq1 == data) begin
+									tag_freq1 <= 0;
+									freq1 <= 0;
+								end else if (tag_freq2 == data) begin
+									tag_freq2 <= 0;
+									freq2 <= 0;
+								end
 							end
 						end
-						//////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 					end
 				end else begin
 					if (preE0) begin			// 前一个是E0
@@ -169,34 +169,36 @@ always @(posedge clk) begin
 						buffer_newkey <= {buffer_newkey[1:0], 1'b1};
 						
 /////////////////////// For Audio /////////////////////////////////
-						if (keyIndex(data) == 8) begin
-							if (volume_ten < 8) begin // 音量加，上限80
-								volume <= volume + 1;
-								if (volume_d < 9)
-									volume_d <= volume_d + 1;
-								else begin
-									volume_ten <= volume_ten + 1;
-									volume_d <= 0;
+						if (audio_ena) begin
+							if (keyIndex(data) == 8) begin
+								if (volume_ten < 8) begin // 音量加，上限80
+									volume <= volume + 1;
+									if (volume_d < 9)
+										volume_d <= volume_d + 1;
+									else begin
+										volume_ten <= volume_ten + 1;
+										volume_d <= 0;
+									end
 								end
-							end
-						end else
-						if (keyIndex(data) == 9) begin
-							if (volume_ten > 0 || volume_d > 0) begin // 音量减，下限0
-								volume <= volume - 1;
-								if (volume_d > 0)
-									volume_d <= volume_d - 1;
-								else begin
-									volume_ten <= volume_ten - 1;
-									volume_d <= 9;
+							end else
+							if (keyIndex(data) == 9) begin
+								if (volume_ten > 0 || volume_d > 0) begin // 音量减，下限0
+									volume <= volume - 1;
+									if (volume_d > 0)
+										volume_d <= volume_d - 1;
+									else begin
+										volume_ten <= volume_ten - 1;
+										volume_d <= 9;
+									end
 								end
-							end
-						end else begin
-							if (tag_freq1 == 0 && data != tag_freq2) begin
-								freq1 <= getFrequent(keyIndex(data));
-								tag_freq1 <= data;
-							end else if (data != tag_freq1) begin
-								freq2 <= getFrequent(keyIndex(data));
-								tag_freq2 <= data;
+							end else begin
+								if (tag_freq1 == 0 && data != tag_freq2) begin
+									freq1 <= getFrequent(keyIndex(data));
+									tag_freq1 <= data;
+								end else if (data != tag_freq1) begin
+									freq2 <= getFrequent(keyIndex(data));
+									tag_freq2 <= data;
+								end
 							end
 						end
 ///////////////////////////////////////////////////////////////////
@@ -297,7 +299,7 @@ function [3:0] keyIndex;
 		8'h1E: keyIndex = 9; // 音量减
 		8'h1C: keyIndex = 0; 8'h1B: keyIndex = 1; 8'h23: keyIndex = 2;
 		8'h2B: keyIndex = 3; 8'h34: keyIndex = 4; 8'h33: keyIndex = 5;
-		8'h3B: keyIndex = 6; 8'h42: keyIndex = 7; default: keyIndex = 8;
+		8'h3B: keyIndex = 6; 8'h42: keyIndex = 7; default: keyIndex = 10;
 	endcase
 endfunction
 

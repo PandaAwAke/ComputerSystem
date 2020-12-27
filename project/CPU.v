@@ -2,6 +2,7 @@ module CPU(
     input clk,
     input clrn,
     input key_clk,
+    input sw,
     /*output [31:0] pc,
     output [31:0] Instr,
     output [31:0] r2,
@@ -38,7 +39,7 @@ module CPU(
 
 (* ram_init_file = "init_files/main_memory.mif" *) reg [31:0] main_memory [16*1024-1:0];
 (* ram_init_file = "init_files/instr_ram.mif" *) reg [31:0] instr_ram [1023:0];
-reg [31:0] PC = 32'h400000, hi, lo;
+reg [31:0] PC = 32'h400000, hi, lo, pc_out;
 wire [31:0] div_hi, div_lo, mul_hi;
 reg [31:0] register[31:0];
 reg [31:0] instr;
@@ -175,6 +176,7 @@ always @ (posedge clk) begin
         6'd2: begin // instr_fetch
             //PC <= PC + 32'd4;
             instr <= instr_ram[PC[11:2]];
+            pc_out <= PC;
             if (register[27][3] || !clrn) begin //end
                 //out <= register[2];
 				register[27] <= {register[27][31:4], 1'b0, register[27][2:0]};
@@ -385,6 +387,10 @@ always @ (posedge clk) begin
                     6'b000110: register[rd] <= ALUout;
                     6'b000111: register[rd] <= ALUout;
                     6'b001000: PC <= register[rs];
+                    6'b001001: begin //jalr
+                        PC <= register[rs];
+                        register[rd] <= PC;
+                    end
                     6'h12: register[rd] <= lo; //mflo
                     6'h10: register[rd] <= hi; //mfhi
                     6'b011000, 6'b011001:  //mult, multu
@@ -425,7 +431,7 @@ always @ (posedge clk) begin
                     PC <= {PC[31:28], addr, 2'b0};
                 end                    
             endcase
-            if (register[27][0])
+            if (register[27][0] || sw)
                 state <= 6'd13;
             else
                 state <= 6'd2;
@@ -487,7 +493,7 @@ always @ (posedge clk) begin
                 register[29] <= 32'h7fffeffc;
                 //register[27] <= {register[27][31:5], 5'b00000};
                 //register[27][3:0] <= 4'h1;
-					 register[27][4:0] <= 5'b00000;
+                register[27][4:0] <= 5'b00000;
                 register[26] <= 32'h7fff0000;
                 //out_end_n <= 1'b0;
                 //require_input <= 1'b0;
@@ -499,7 +505,8 @@ always @ (posedge clk) begin
         6'd13: begin //0, single run print
             ascii_out <= 8'h30;
             out_end_n <= 1'b1;
-            state <= 6'd14; 
+            state <= 6'd14;
+            //pc_out <= PC - 32'd4;
         end
         6'd14: begin //x
             if (out_ready) begin
@@ -509,56 +516,56 @@ always @ (posedge clk) begin
         end
         6'd15: begin //PC
             if (out_ready) begin
-                HEX2ASCII(PC[31:28], tmp_ascii);
+                HEX2ASCII(pc_out[31:28], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd16;
             end
         end
         6'd16: begin 
             if (out_ready) begin
-                HEX2ASCII(PC[27:24], tmp_ascii);
+                HEX2ASCII(pc_out[27:24], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd17;
             end
         end
         6'd17: begin 
             if (out_ready) begin
-                HEX2ASCII(PC[23:20], tmp_ascii);
+                HEX2ASCII(pc_out[23:20], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd18;
             end
         end
         6'd18: begin 
             if (out_ready) begin
-                HEX2ASCII(PC[19:16], tmp_ascii);
+                HEX2ASCII(pc_out[19:16], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd19;
             end
         end
         6'd19: begin 
             if (out_ready) begin
-                HEX2ASCII(PC[15:12], tmp_ascii);
+                HEX2ASCII(pc_out[15:12], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd20;
             end
         end
         6'd20: begin
             if (out_ready) begin
-                HEX2ASCII(PC[11:8], tmp_ascii);
+                HEX2ASCII(pc_out[11:8], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd21;
             end
         end
         6'd21: begin
             if (out_ready) begin
-                HEX2ASCII(PC[7:4], tmp_ascii);
+                HEX2ASCII(pc_out[7:4], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd22;
             end
         end
         6'd22: begin
             if (out_ready) begin
-                HEX2ASCII(PC[3:0], tmp_ascii);
+                HEX2ASCII(pc_out[3:0], tmp_ascii);
                 ascii_out <= tmp_ascii;
                 state <= 6'd23;
             end

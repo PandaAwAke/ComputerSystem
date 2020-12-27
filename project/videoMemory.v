@@ -431,10 +431,6 @@ begin
 			roll_cnt_lines <= roll_cnt_lines_max;
 		end
 		
-		// 先让滚屏回到对应位置
-		roll_cnt <= roll_cnt_max;
-		roll_cnt_lines <= roll_cnt_lines_max;
-		
 		///////////////// Backspace /////////////////////
 		if (scanCode == 8'h66 && cursor > BASH_HEAD_LEN) begin// 退格键
 			// keys[cursor - 1] <= 0;
@@ -493,7 +489,7 @@ begin
 		if (direction_flag) begin							// 方向键
 			case (scanCode_E0)
 				8'h75: begin	// 上
-					if (roll_cnt_lines > 0) begin
+					if (roll_cnt > 0) begin
 						roll_cnt_lines <= roll_cnt_lines - 1;
 						roll_cnt <= roll_cnt - 70;
 					end

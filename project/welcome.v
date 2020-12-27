@@ -17,7 +17,7 @@ module welcome(
 //  Parameter/Wire/Reg coding
 //=======================================================
 parameter StartTime = 39999; 	// 时间到多少开始动画(VGA刚连上会有黑屏)，数值每10000是1秒
-parameter ScrollTime = 59; 	// 多少时间向下移动1像素，数值每10000是1秒
+parameter ScrollTime = 49; 	// 多少时间向下移动1像素，数值每10000是1秒
 
 reg  [9:0]	offsetY1;		// 控制从上到中
 reg  [9:0]	offsetY2;		// 控制从中到下

@@ -15,7 +15,7 @@ module ComputerSystem(
 	input 		     [3:0]		KEY,
 
 	//////////// SW //////////
-	//input 		     [9:0]		SW,
+	input 		     [9:0]		SW,
 
 	//////////// LED //////////
 	output		     [9:0]		LEDR,
@@ -158,7 +158,8 @@ keyboardHandler mys_kbHandler(
 	.freq2(freq2),
 	.volume_ten(volume_ten),
 	.volume_d(volume_d),
-	.volume(volume)
+	.volume(volume),
+	.audio_ena(audio_ena)
 );
 
 
@@ -267,6 +268,7 @@ CPU cpu(
 	
     .clrn(ESC_n),
     .key_clk(ENTER_n),
+	 .sw(SW[0]),
     /*.pc(PC),
     .Instr(instr),
     .r2(r2),

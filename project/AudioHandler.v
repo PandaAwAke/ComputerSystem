@@ -32,16 +32,10 @@ wire [15:0] w1 = sintable[freq1_counter[15:6]];
 wire [15:0] w2 = sintable[freq2_counter[15:6]];
 wire [15:0] helper_w1 = {w1[15], w1[15:1]};
 wire [15:0] helper_w2 = {w2[15], w2[15:1]};
-reg config_reset_n;
-reg refreshflag;
-reg [8:0] last_volume;
 
 initial begin
 	freq1_counter = 0;
 	freq2_counter = 0;
-	config_reset_n = 1;
-	refreshflag = 0;
-	last_volume = 0;
 end
 
 //=======================================================
@@ -69,15 +63,6 @@ always @(posedge clk) begin
 	end else begin
 		audiodata <= 0;
 	end
-	
-	if (last_volume != volume) begin
-		config_reset_n <= 0;
-	end
-	
-	if (config_reset_n == 0)
-		config_reset_n <= 1;
-	
-	last_volume <= volume;
 end
 
 always @(posedge AUD_DACLRCK or negedge reset_n) begin

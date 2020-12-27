@@ -9,12 +9,17 @@ module ALU(
 );
 
 wire [31:0] res0, res1, res2, res3, res4, res5, res6, res7, res8, res9, res10, res11, res12, res13;
+wire [30:0] low1, low2;
 wire [63:0] res14;
+
+assign low1 = in1[30:0];
+assign low2 = in2[30:0];
+
 assign res0 = in1 + in2;
 assign res1 = in1 + in2;
 assign res2 = in1 - in2;
 assign res3 = in1 - in2;
-assign res4 = ((((in1[31] == 1'b1) && (in2[31] == 1'b0)) || ((in1[31] == in2[31]) && (in1[30:0] < in2[30:0])))? 32'd1 : 32'd0);
+assign res4 = ((((in1[31] == 1'b1) && (in2[31] == 1'b0)) || ((in1[31] == in2[31]) && (low1 < low2)))? 32'd1 : 32'd0);
 assign res5 = ((in1 < in2)? 32'd1 : 32'd0);
 assign res6 = in1 & in2;
 assign res7 = in1 | in2;
