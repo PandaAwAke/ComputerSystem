@@ -44,7 +44,7 @@
 
 [MIPS 指令集(共31条）_晶喜的专栏-CSDN博客_mips指令集](https://blog.csdn.net/yixilee/article/details/4316617)
 
-[MIPS指令集及汇编完全解析_En Takahashi 's blog-CSDN博客_mips指令集](https://blog.csdn.net/qq_41191281/article/details/85933985)
+[MIPS指令集与简要分析](https://www.jianshu.com/p/ac2c9e7b1d8f)
 
 [MIPS Instruction Reference](http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html)
 
